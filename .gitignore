@@ -15,3 +15,11 @@
 #System Files
 .DS_Store
 Thumbs.db
+
+vendor/
+!vendor/vendor.json
+
+tmp/*
+gorm.db
+
+bak.*
