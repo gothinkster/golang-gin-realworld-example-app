@@ -1,24 +1,33 @@
 package users
 
-import "github.com/jinzhu/gorm"
-
+import (
+    "golang.org/x/crypto/bcrypt"
+    "golang-gin-starter-kit/common"
+)
 
 type UserModel struct {
-    gorm.Model
-    Username      string      `gorm:"column:username"`
-    Email         string      `gorm:"column:email"`
-    Bio           string      `gorm:"column:bio"`
-    Image         string      `gorm:"column:image"`
-    Salt          string      `gorm:"column:salt"`
-    PasswordHash  string      `gorm:"column:password"`
+    ID            uint        `json:"id" gorm:"primary_key"`
+    Username      string      `json:"username" gorm:"column:username"`
+    Email         string      `json:"email" gorm:"column:email;unique_index"`
+    Bio           string      `json:"bio" gorm:"column:bio"`
+    Image         *string     `json:"image" gorm:"column:image"`
+    PasswordHash  string      `json:"-" gorm:"column:password"`
+    JWT           string      `json:"jwt" gorm:"column:-"`
 }
 
 func (u *UserModel) setPassword(password string){
-    passwordHash := password + "salt"
-    u.PasswordHash = passwordHash
+    bytePassword := []byte(password)
+    passwordHash, _ := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
+    u.PasswordHash = string(passwordHash)
 }
 
-func (u *UserModel) checkPassword(password string) bool{
-    passwordHash := password + "salt"
-    return passwordHash == u.PasswordHash
+func (u *UserModel) checkPassword(password string) error{
+    bytePassword := []byte(password)
+    byteHashedPassword := []byte(u.PasswordHash)
+    token, err := common.GenToken(u.ID)
+    if err!=nil {
+        return err
+    }
+    u.JWT = token
+    return bcrypt.CompareHashAndPassword(byteHashedPassword, bytePassword)
 }

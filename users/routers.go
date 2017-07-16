@@ -50,7 +50,8 @@ func (r *Router) Login(c *gin.Context) {
     }
     fmt.Println("user from DB: ", userModel)
 
-    if valid := userModel.checkPassword(form.User.Password); !valid {
+    err := userModel.checkPassword(form.User.Password)
+    if err != nil {
         c.JSON(http.StatusForbidden, gin.H{"Error" : "password error!"})
         return
     }
