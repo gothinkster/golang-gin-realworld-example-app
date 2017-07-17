@@ -15,19 +15,29 @@ type UserModel struct {
     JWT           string      `json:"jwt" gorm:"column:-"`
 }
 
-func (u *UserModel) setPassword(password string){
+func (u *UserModel) setJWT()error{
+    token, err := common.GenToken(u.ID)
+    u.JWT = token
+    return err
+}
+
+func (u *UserModel) setPassword(password string) error{
     bytePassword := []byte(password)
-    passwordHash, _ := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
+    passwordHash, err := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
+    if err!=nil {
+        return err
+    }
     u.PasswordHash = string(passwordHash)
+    err = u.setJWT()
+    return err
 }
 
 func (u *UserModel) checkPassword(password string) error{
     bytePassword := []byte(password)
     byteHashedPassword := []byte(u.PasswordHash)
-    token, err := common.GenToken(u.ID)
+    err := u.setJWT()
     if err!=nil {
         return err
     }
-    u.JWT = token
     return bcrypt.CompareHashAndPassword(byteHashedPassword, bytePassword)
 }

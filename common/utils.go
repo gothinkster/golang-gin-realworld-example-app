@@ -7,6 +7,7 @@ import (
     "fmt"
     
     "github.com/dgrijalva/jwt-go"
+    "gopkg.in/go-playground/validator.v8"
 
 )
 
@@ -40,4 +41,15 @@ func GenToken(id uint) (string, error){
     }
     // Sign and get the complete encoded token as a string
     return token.SignedString([]byte(NBSecretPassword))
+}
+
+func ErrsToList(err error) ([]interface{}){
+    errs := err.(validator.ValidationErrors)
+    var res []interface{}
+    for _, v := range errs {
+        // can translate each error one at a time.
+        fmt.Println(v.Value)
+        res = append(res, v.Field)
+    }
+    return res
 }

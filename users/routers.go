@@ -5,6 +5,7 @@ import (
     "github.com/jinzhu/gorm"
     "net/http"
     "fmt"
+    "golang-gin-starter-kit/common"
 )
 
 type Router struct {
@@ -19,15 +20,15 @@ func Register(router *gin.RouterGroup){
 
 func (r *Router) Registration(c *gin.Context) {
     db := c.MustGet("DB").(*gorm.DB)
-    var form RegistrationValidator
-    if err := c.Bind(&form); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"Data binding error" : err})
+    var validator RegistrationValidator
+    if err := c.Bind(&validator); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"Data binding error" : common.ErrsToList(err)})
         return
     }
     var userModel UserModel
-    userModel.Username = form.User.Username
-    userModel.Email = form.User.Email
-    userModel.setPassword(form.User.Password)
+    userModel.Username = validator.User.Username
+    userModel.Email = validator.User.Email
+    userModel.setPassword(validator.User.Password)
     if err := db.Save(&userModel).Error; err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"Database error" : err})
         return
@@ -37,20 +38,20 @@ func (r *Router) Registration(c *gin.Context) {
 
 func (r *Router) Login(c *gin.Context) {
     db := c.MustGet("DB").(*gorm.DB)
-    var form LoginValidator
-    if err := c.Bind(&form); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"Data binding error" : err})
+    var validator LoginValidator
+    if err := c.Bind(&validator); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"Data binding error" : common.ErrsToList(err)})
         return
     }
     var userModel UserModel
 
-    if err := db.Where(&UserModel{ Email: form.User.Email}).First(&userModel).Error; err != nil {
+    if err := db.Where(&UserModel{ Email: validator.User.Email}).First(&userModel).Error; err != nil {
         c.JSON(http.StatusForbidden, gin.H{"Database error" : err})
         return
     }
     fmt.Println("user from DB: ", userModel)
 
-    err := userModel.checkPassword(form.User.Password)
+    err := userModel.checkPassword(validator.User.Password)
     if err != nil {
         c.JSON(http.StatusForbidden, gin.H{"Error" : "password error!"})
         return
