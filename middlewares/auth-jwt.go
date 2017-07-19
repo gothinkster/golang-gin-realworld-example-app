@@ -2,6 +2,7 @@ package middlewares
 
 
 import (
+    "net/http"
     "gopkg.in/gin-gonic/gin.v1"
     "github.com/dgrijalva/jwt-go"
     "github.com/dgrijalva/jwt-go/request"
@@ -15,7 +16,7 @@ func Auth(secret string) gin.HandlerFunc {
         })
 
         if err != nil {
-            c.AbortWithError(401, err)
+            c.AbortWithError(http.StatusUnauthorized, err)
         }
     }
 }

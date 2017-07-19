@@ -2,7 +2,6 @@ package main
 
 import (
 	"gopkg.in/gin-gonic/gin.v1"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 
     "golang-gin-starter-kit/common"
     "golang-gin-starter-kit/middlewares"
@@ -15,6 +14,7 @@ func main() {
 	db := common.DatabaseConnection()
 	defer db.Close()
 
+    db.DB().SetMaxIdleConns(10)
     db.AutoMigrate(&users.UserModel{})
 
 

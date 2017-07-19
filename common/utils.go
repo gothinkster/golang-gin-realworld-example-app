@@ -8,11 +8,12 @@ import (
     
     "github.com/dgrijalva/jwt-go"
     "gopkg.in/go-playground/validator.v8"
+    _ "github.com/jinzhu/gorm/dialects/sqlite"
 
 )
 
 func DatabaseConnection() *gorm.DB {
-    db, err := gorm.Open("sqlite3", "gorm.db")
+    db, err := gorm.Open("sqlite3", "./../gorm.db")
     if err != nil {
         fmt.Println("db err: ",err)
     }
@@ -48,7 +49,7 @@ func ErrsToList(err error) ([]interface{}){
     var res []interface{}
     for _, v := range errs {
         // can translate each error one at a time.
-        fmt.Println(v.Value)
+        //fmt.Println(v.Value)
         res = append(res, v.Field)
     }
     return res
