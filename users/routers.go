@@ -9,12 +9,15 @@ import (
 )
 
 type Router struct {
+	BasePath string
 }
 
-func Register(router *gin.RouterGroup) {
+func Register(router *gin.RouterGroup) Router{
 	r := Router{}
+	r.BasePath = router.BasePath()
 	router.POST("/", r.Registration)
 	router.POST("/login", r.Login)
+	return r
 }
 
 func (r *Router) Registration(c *gin.Context) {
