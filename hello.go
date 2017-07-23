@@ -19,12 +19,16 @@ func main() {
 
 
     r := gin.Default()
+
 	r.Use(middlewares.DatabaseMiddleware(db))
 
-    usersGroup := r.Group("/api/v1/users")
-    users.Register(usersGroup)
+    v1 := r.Group("/api/v1")
+    users.UsersRegister(v1.Group("/users"))
 
-    r.Use(middlewares.Auth(common.NBSecretPassword))
+    v1.Use(middlewares.Auth())
+    users.UserRegister(v1.Group("/user"))
+
+
     testAuth := r.Group("/api/v1/ping")
 
     testAuth.GET("/", func(c *gin.Context) {

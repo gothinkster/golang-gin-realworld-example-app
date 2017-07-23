@@ -35,11 +35,11 @@ func RandString(n int) string {
 
 const NBSecretPassword = "heheda";
 
-func GenToken(id uint) (string, error){
+func GenToken(id uint64) (string, error){
     token := jwt.New(jwt.GetSigningMethod("HS256"))
     // Set some claims
     token.Claims = jwt.MapClaims{
-        "Id":  id,
+        "id":  id,
         "exp": time.Now().Add(time.Hour * 24).Unix(),
     }
     // Sign and get the complete encoded token as a string

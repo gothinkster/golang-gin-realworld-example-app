@@ -44,25 +44,21 @@ func TestUsermodel(t *testing.T) {
     userModel := newUserModel()
     err := userModel.checkPassword("")
     assert.Error(err,"empty password should return err")
-    assert.Equal(userModel.JWT, "","JWT's should be null")
 
     userModel = newUserModel()
     err = userModel.setPassword("")
     assert.Error(err,"empty password can not be set null")
-    assert.Equal(userModel.JWT, "","JWT's should be null")
 
     userModel = newUserModel()
     err = userModel.setPassword("asd123!@#ASD")
     assert.NoError(err,"password should be set successful")
     assert.Len(userModel.PasswordHash, 60,"password hash length should be 60")
-    assert.Len(userModel.JWT, 115,"JWT's length should be 115")
 
     err = userModel.checkPassword("sd123!@#ASD")
     assert.Error(err,"password should be checked and not validated")
 
     err = userModel.checkPassword("asd123!@#ASD")
     assert.NoError(err,"password should be checked and validated")
-    assert.Len(userModel.JWT, 115,"JWT's length should be 115")
 
 
     userModel.JWT = "_jwt_jwt"
@@ -82,7 +78,7 @@ func TestRegister(t *testing.T) {
     const path string = "/api/v1/users"
 
     usersGroup := r.Group(path)
-    router := Register(usersGroup)
+    router := UsersRegister(usersGroup)
     assert.Equal(path,router.BasePath,"Base path should be set")
 }
 
@@ -129,7 +125,7 @@ func TestRouter_Registration(t *testing.T) {
     r := gin.New()
     usersGroup := r.Group("/p")
     usersGroup.Use(middlewares.DatabaseMiddleware(test_db))
-    Register(usersGroup)
+    UsersRegister(usersGroup)
     for _, testData := range routerRegistrationTests{
         bodyData := testData.bodyData
         req, err := http.NewRequest("POST", "/p/", bytes.NewBufferString(bodyData))

@@ -13,7 +13,7 @@ type Router struct {
 	BasePath string
 }
 
-func Register(router *gin.RouterGroup) Router{
+func UsersRegister(router *gin.RouterGroup) Router{
 	r := Router{}
 	r.BasePath = router.BasePath()
 	router.POST("/", r.Registration)
@@ -21,10 +21,19 @@ func Register(router *gin.RouterGroup) Router{
 	return r
 }
 
+func UserRegister(router *gin.RouterGroup) Router{
+    r := Router{}
+    r.BasePath = router.BasePath()
+    router.GET("/", r.Retrieve)
+    router.PUT("/", r.Update)
+    return r
+}
+
+
 func (r Router) Registration(c *gin.Context) {
 	db := c.MustGet("DB").(*gorm.DB)
 
-	var validator RegistrationValidator
+	var validator UserModelValidator
 	if err := common.Bind(c, &validator); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
 		return
@@ -37,6 +46,7 @@ func (r Router) Registration(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewError("database",err))
 		return
 	}
+    userModel.setJWT()
 	c.JSON(http.StatusCreated, gin.H{"user": userModel})
 }
 
@@ -60,5 +70,47 @@ func (r Router) Login(c *gin.Context) {
         c.JSON(http.StatusForbidden, common.NewError("login",errors.New("Not Registered email or invalid password")))
 		return
 	}
+    userModel.setJWT()
 	c.JSON(http.StatusOK, gin.H{"user": userModel})
+}
+
+func (r Router) Retrieve(c *gin.Context) {
+    db := c.MustGet("DB").(*gorm.DB)
+    my_user_id := c.MustGet("my_user_id")
+
+    var userModel UserModel
+    if err := db.First(&userModel,my_user_id).Error; err != nil {
+        c.JSON(http.StatusUnprocessableEntity, common.NewError("database",err))
+        return
+    }
+    userModel.setJWT()
+    c.JSON(http.StatusCreated, gin.H{"user": userModel})
+}
+
+func (r Router) Update(c *gin.Context) {
+    db := c.MustGet("DB").(*gorm.DB)
+    my_user_id := c.MustGet("my_user_id")
+
+    var validator UserModelValidator
+    if err := common.Bind(c, &validator); err != nil {
+        c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
+        return
+    }
+    var userModel UserModel
+    if err := db.First(&userModel,my_user_id).Error; err != nil {
+        c.JSON(http.StatusUnprocessableEntity, common.NewError("database",err))
+        return
+    }
+    userModel.Username = validator.User.Username
+    userModel.Email = validator.User.Email
+    userModel.Bio = validator.User.Bio
+    userModel.Image = &validator.User.Image
+    userModel.setPassword(validator.User.Password)
+
+    if err := db.Save(&userModel).Error; err != nil {
+        c.JSON(http.StatusUnprocessableEntity, common.NewError("database",err))
+        return
+    }
+    userModel.setJWT()
+    c.JSON(http.StatusCreated, gin.H{"user": userModel})
 }

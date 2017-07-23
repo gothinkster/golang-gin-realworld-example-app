@@ -7,7 +7,7 @@ import (
 )
 
 type UserModel struct {
-    ID            uint        `json:"id" gorm:"primary_key"`
+    ID            uint64      `json:"id" gorm:"primary_key"`
     Username      string      `json:"username" gorm:"column:username"`
     Email         string      `json:"email" gorm:"column:email;unique_index"`
     Bio           string      `json:"bio" gorm:"column:bio"`
@@ -32,17 +32,11 @@ func (u *UserModel) setPassword(password string) error{
         return err
     }
     u.PasswordHash = string(passwordHash)
-    err = u.setJWT()
-    return err
+    return nil
 }
 
 func (u *UserModel) checkPassword(password string) error{
     bytePassword := []byte(password)
     byteHashedPassword := []byte(u.PasswordHash)
-    err := bcrypt.CompareHashAndPassword(byteHashedPassword, bytePassword)
-    if err!=nil {
-        return err
-    }
-    err = u.setJWT()
-    return err
+    return bcrypt.CompareHashAndPassword(byteHashedPassword, bytePassword)
 }
