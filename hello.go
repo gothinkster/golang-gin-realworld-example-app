@@ -24,8 +24,8 @@ func main() {
     usersGroup := r.Group("/api/v1/users")
     users.Register(usersGroup)
 
+    r.Use(middlewares.Auth(common.NBSecretPassword))
     testAuth := r.Group("/api/v1/ping")
-    testAuth.Use(middlewares.Auth(common.NBSecretPassword))
 
     testAuth.GET("/", func(c *gin.Context) {
         c.JSON(200, gin.H{

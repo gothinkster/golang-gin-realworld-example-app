@@ -12,7 +12,8 @@ import (
     "github.com/jinzhu/gorm"
     "os"
     "golang-gin-starter-kit/middlewares"
-    "regexp"
+    _ "regexp"
+    _ "fmt"
 )
 
 var image_url ="https://golang.org/doc/gopher/frontpage.png"
@@ -85,33 +86,75 @@ func TestRegister(t *testing.T) {
     assert.Equal(path,router.BasePath,"Base path should be set")
 }
 
+var test_db *gorm.DB
+
+
+var routerRegistrationTests = []struct {
+    bodyData        string
+    expectedCode    int
+    responseRegexg  string
+    msg             string
+}{
+    {
+        `{"user":{"username": "wangzitian0","email": "wzt@gg.cn","password": "jakejxke"}}`,
+        http.StatusCreated,
+        `{"user":{"id":1,"username":"wangzitian0","email":"wzt@gg.cn","bio":"","image":null,"jwt":"([a-zA-Z0-9-_.]{115})"}}`,
+        "valid data and should return 200",
+    },
+    {
+        `{"user":{"username": "u","email": "wzt@gg.cn","password": "jakejxke"}}`,
+        http.StatusUnprocessableEntity,
+        `{"errors":{"Username":"{min: 8}"}}`,
+        "short username should return error",
+    },
+    {
+        `{"user":{"username": "wangzitian0","email": "wzt@gg.cn","password": "j"}}`,
+        http.StatusUnprocessableEntity,
+        `{"errors":{"Password":"{min: 8}"}}`,
+        "short password should return error",
+    },
+    {
+        `{"user":{"username": "wangzitian0","email": "wztgg.cn","password": "jakejxke"}}`,
+        http.StatusUnprocessableEntity,
+        `{"errors":{"Email":"{key: email}"}}`,
+        "email invalid should return error",
+    },
+}
+
+
 func TestRouter_Registration(t *testing.T) {
     assert := assert.New(t)
 
-    test_db, _ := gorm.Open("sqlite3", "./../gorm_test.db")
-    test_db.AutoMigrate(&UserModel{})
-    defer os.Remove("./../gorm_test.db")
 
     r := gin.New()
     usersGroup := r.Group("/p")
     usersGroup.Use(middlewares.DatabaseMiddleware(test_db))
     Register(usersGroup)
-    var bodyData string= `{"user":{"username": "Jacxxxxxx","email": "wztx@gg.cn","password": "jakejxke"}}`
-    //pat := regexp.MustCompile(`\{\"user\":\{\"id\":(\d+),\"username\":\"Jacxxxxxx\",\"email\":\"wztx@gg.cn\",\"bio\":\"\",\"image\":null,\"jwt\":\"(^\"+)\"\}\}`)
+    for _, testData := range routerRegistrationTests{
+        bodyData := testData.bodyData
+        req, err := http.NewRequest("POST", "/p/", bytes.NewBufferString(bodyData))
+        req.Header.Set("Content-Type", "application/json")
 
-    req, err := http.NewRequest("POST", "/p/", bytes.NewBufferString(bodyData))
-    req.Header.Set("Content-Type", "application/json")
+        assert.NoError(err)
+        w := httptest.NewRecorder()
+        r.ServeHTTP(w, req)
 
-    assert.NoError(err)
-    w := httptest.NewRecorder()
-    r.ServeHTTP(w, req)
-    assert.Equal(http.StatusCreated, w.Code,"response status should be 200")
+        assert.Equal(testData.expectedCode, w.Code, "code - " + testData.msg)
+        assert.Regexp(testData.responseRegexg, w.Body.String(),"regexp - %v\n " + testData.msg)
+    }
 
 
-    pat := regexp.MustCompile(`\{\"user\":\{\"id\":1,\"username\":\"Jacxxxxxx\",\"email\":\"wztx@gg.cn\",\"bio\":\"\",\"image\":null,\"jwt\":\"([^\"]+)\"\}\}`)
+}
 
-    match := pat.FindStringSubmatch(w.Body.String())
-    assert.True(len(match)!=0)
-    assert.Len(match[1],115,"JWT's length should be 115")
+func TestMain(m *testing.M) {
 
+    test_db, _ = gorm.Open("sqlite3", "./../gorm_test.db")
+    test_db.AutoMigrate(&UserModel{})
+    //fmt.Println("before")
+    exitVal := m.Run()
+    //fmt.Println("after")
+    test_db.Close()
+    os.Remove("./../gorm_test.db")
+
+    os.Exit(exitVal)
 }
