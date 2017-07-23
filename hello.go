@@ -22,14 +22,14 @@ func main() {
 
 	r.Use(middlewares.DatabaseMiddleware(db))
 
-    v1 := r.Group("/api/v1")
+    v1 := r.Group("/api")
     users.UsersRegister(v1.Group("/users"))
 
     v1.Use(middlewares.Auth())
     users.UserRegister(v1.Group("/user"))
 
 
-    testAuth := r.Group("/api/v1/ping")
+    testAuth := r.Group("/api/ping")
 
     testAuth.GET("/", func(c *gin.Context) {
         c.JSON(200, gin.H{

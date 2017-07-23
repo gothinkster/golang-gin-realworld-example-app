@@ -46,7 +46,7 @@ func (r Router) Registration(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewError("database",err))
 		return
 	}
-    userModel.setJWT()
+    userModel.setToken()
 	c.JSON(http.StatusCreated, gin.H{"user": userModel})
 }
 
@@ -70,7 +70,7 @@ func (r Router) Login(c *gin.Context) {
         c.JSON(http.StatusForbidden, common.NewError("login",errors.New("Not Registered email or invalid password")))
 		return
 	}
-    userModel.setJWT()
+    userModel.setToken()
 	c.JSON(http.StatusOK, gin.H{"user": userModel})
 }
 
@@ -83,7 +83,7 @@ func (r Router) Retrieve(c *gin.Context) {
         c.JSON(http.StatusUnprocessableEntity, common.NewError("database",err))
         return
     }
-    userModel.setJWT()
+    userModel.setToken()
     c.JSON(http.StatusCreated, gin.H{"user": userModel})
 }
 
@@ -91,26 +91,39 @@ func (r Router) Update(c *gin.Context) {
     db := c.MustGet("DB").(*gorm.DB)
     my_user_id := c.MustGet("my_user_id")
 
-    var validator UserModelValidator
-    if err := common.Bind(c, &validator); err != nil {
-        c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
-        return
-    }
     var userModel UserModel
     if err := db.First(&userModel,my_user_id).Error; err != nil {
         c.JSON(http.StatusUnprocessableEntity, common.NewError("database",err))
+        return
+    }
+    var validator UserModelValidator
+    validator.User.Username = userModel.Username
+    validator.User.Email = userModel.Email
+    validator.User.Password = userModel.PasswordHash
+    validator.User.Bio = userModel.Bio
+    if userModel.Image!=nil{
+        validator.User.Image = *userModel.Image
+    }
+    if err := common.Bind(c, &validator); err != nil {
+        c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
         return
     }
     userModel.Username = validator.User.Username
     userModel.Email = validator.User.Email
     userModel.Bio = validator.User.Bio
     userModel.Image = &validator.User.Image
-    userModel.setPassword(validator.User.Password)
+
+    if validator.User.Image==""{
+        userModel.Image = nil
+    }
+    if validator.User.Password!=userModel.PasswordHash{
+        userModel.setPassword(validator.User.Password)
+    }
 
     if err := db.Save(&userModel).Error; err != nil {
         c.JSON(http.StatusUnprocessableEntity, common.NewError("database",err))
         return
     }
-    userModel.setJWT()
+    userModel.setToken()
     c.JSON(http.StatusCreated, gin.H{"user": userModel})
 }

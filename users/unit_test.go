@@ -25,7 +25,7 @@ func newUserModel() UserModel{
         Email:"wzt@g.cn",
         Bio:"heheda",
         Image: &image_url,
-        JWT:"",
+        Token:"",
         PasswordHash:"",
     }
 }
@@ -61,8 +61,8 @@ func TestUsermodel(t *testing.T) {
     assert.NoError(err,"password should be checked and validated")
 
 
-    userModel.JWT = "_jwt_jwt"
-    marshalModel:=[]byte(`{"id":2,"username":"asd123!@#ASD","email":"wzt@g.cn","bio":"heheda","image":"https://golang.org/doc/gopher/frontpage.png","jwt":"_jwt_jwt"}`)
+    userModel.Token = "_token"
+    marshalModel:=[]byte(`{"id":2,"username":"asd123!@#ASD","email":"wzt@g.cn","bio":"heheda","image":"https://golang.org/doc/gopher/frontpage.png","token":"_token"}`)
     modelJSON, _ := json.Marshal(userModel)
     //fmt.Println("%s",string(modelJSON))
     assert.Equal(marshalModel, modelJSON,"Marshal should be equal")
@@ -75,7 +75,7 @@ func TestRegister(t *testing.T) {
     assert := assert.New(t)
 
     r := gin.New()
-    const path string = "/api/v1/users"
+    const path string = "/api/users"
 
     usersGroup := r.Group(path)
     router := UsersRegister(usersGroup)
@@ -94,7 +94,7 @@ var routerRegistrationTests = []struct {
     {
         `{"user":{"username": "wangzitian0","email": "wzt@gg.cn","password": "jakejxke"}}`,
         http.StatusCreated,
-        `{"user":{"id":1,"username":"wangzitian0","email":"wzt@gg.cn","bio":"","image":null,"jwt":"([a-zA-Z0-9-_.]{115})"}}`,
+        `{"user":{"id":1,"username":"wangzitian0","email":"wzt@gg.cn","bio":"","image":null,"token":"([a-zA-Z0-9-_.]{115})"}}`,
         "valid data and should return 200",
     },
     {

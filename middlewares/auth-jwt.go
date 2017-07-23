@@ -7,11 +7,36 @@ import (
     "github.com/dgrijalva/jwt-go"
     "github.com/dgrijalva/jwt-go/request"
     "golang-gin-starter-kit/common"
+    "strings"
 )
+// Strips 'Bearer ' prefix from bearer token string
+func stripBearerPrefixFromTokenString(tok string) (string, error) {
+    // Should be a bearer token
+    if len(tok) > 5 && strings.ToUpper(tok[0:6]) == "TOKEN " {
+        return tok[6:], nil
+    }
+    return tok, nil
+}
+
+// Extract bearer token from Authorization header
+// Uses PostExtractionFilter to strip "Bearer " prefix from header
+var AuthorizationHeaderExtractor = &request.PostExtractionFilter{
+    request.HeaderExtractor{"Authorization"},
+    stripBearerPrefixFromTokenString,
+}
+
+// Extractor for OAuth2 access tokens.  Looks in 'Authorization'
+// header then 'access_token' argument for a token.
+var MyAuth2Extractor = &request.MultiExtractor{
+    AuthorizationHeaderExtractor,
+    request.ArgumentExtractor{"access_token"},
+}
+
+
 
 func Auth() gin.HandlerFunc {
     return func(c *gin.Context) {
-        token, err := request.ParseFromRequest(c.Request, request.OAuth2Extractor, func(token *jwt.Token) (interface{}, error) {
+        token, err := request.ParseFromRequest(c.Request, MyAuth2Extractor, func(token *jwt.Token) (interface{}, error) {
             b := ([]byte(common.NBSecretPassword))
             return b, nil
         })

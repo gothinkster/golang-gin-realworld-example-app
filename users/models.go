@@ -13,12 +13,12 @@ type UserModel struct {
     Bio           string      `json:"bio" gorm:"column:bio"`
     Image         *string     `json:"image" gorm:"column:image"`
     PasswordHash  string      `json:"-" gorm:"column:password;not null"`
-    JWT           string      `json:"jwt" gorm:"column:-"`
+    Token         string      `json:"token" gorm:"column:-"`
 }
 
-func (u *UserModel) setJWT()error{
+func (u *UserModel) setToken()error{
     token, err := common.GenToken(u.ID)
-    u.JWT = token
+    u.Token = token
     return err
 }
 

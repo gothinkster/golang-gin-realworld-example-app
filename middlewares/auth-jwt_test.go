@@ -54,7 +54,7 @@ func TestUnAuth(t *testing.T) {
     token, err := common.GenToken(uint64(2))
     req, err := http.NewRequest("GET", "/v1/ping", nil)
     assert.NoError(err)
-    req.Header.Set("Authorization", "Bearer "+token)
+    req.Header.Set("Authorization", "Token "+token)
     w := httptest.NewRecorder()
     r.ServeHTTP(w, req)
     assert.Equal(pong, w.Body.String(), "response content should be 'pong'")
