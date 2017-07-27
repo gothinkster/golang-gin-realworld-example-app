@@ -3,7 +3,6 @@ package common
 import (
     "math/rand"
     "time"
-    "github.com/jinzhu/gorm"
     "fmt"
     
     "github.com/dgrijalva/jwt-go"
@@ -13,14 +12,6 @@ import (
     "github.com/gin-gonic/gin/binding"
     "gopkg.in/gin-gonic/gin.v1"
 )
-
-func DatabaseConnection() *gorm.DB {
-    db, err := gorm.Open("sqlite3", "./../gorm.db")
-    if err != nil {
-        fmt.Println("db err: ",err)
-    }
-    return db
-}
 
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
@@ -33,17 +24,22 @@ func RandString(n int) string {
     return string(b)
 }
 
-const NBSecretPassword = "heheda";
+const NBSecretPassword = "A String Very Very Very Strong!!@##$!@#$";
+const NBRandomPassword = "A String Very Very Very Niubilty!!@##$!@#4";
 
-func GenToken(id uint64) (string, error){
-    token := jwt.New(jwt.GetSigningMethod("HS256"))
+func GenToken(id uint) string{
+    jwt_token := jwt.New(jwt.GetSigningMethod("HS256"))
     // Set some claims
-    token.Claims = jwt.MapClaims{
+    jwt_token.Claims = jwt.MapClaims{
         "id":  id,
         "exp": time.Now().Add(time.Hour * 24).Unix(),
     }
     // Sign and get the complete encoded token as a string
-    return token.SignedString([]byte(NBSecretPassword))
+    token, err := jwt_token.SignedString([]byte(NBSecretPassword))
+    if err!=nil{
+        panic("jwt generator broken")
+    }
+    return token
 }
 
 func ErrsToList(err error) ([]interface{}){

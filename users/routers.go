@@ -1,129 +1,131 @@
 package users
 
 import (
-	"fmt"
-	"github.com/jinzhu/gorm"
-	"golang-gin-starter-kit/common"
-	"gopkg.in/gin-gonic/gin.v1"
-	"net/http"
+    "golang-gin-starter-kit/common"
+    "gopkg.in/gin-gonic/gin.v1"
+    "net/http"
     "errors"
 )
 
-type Router struct {
-	BasePath string
+func UsersRegister(router *gin.RouterGroup) {
+    router.POST("/", UsersRegistration)
+    router.POST("/login", UsersLogin)
 }
 
-func UsersRegister(router *gin.RouterGroup) Router{
-	r := Router{}
-	r.BasePath = router.BasePath()
-	router.POST("/", r.Registration)
-	router.POST("/login", r.Login)
-	return r
+func UserRegister(router *gin.RouterGroup) {
+    router.GET("/", UserRetrieve)
+    router.PUT("/", UserUpdate)
 }
 
-func UserRegister(router *gin.RouterGroup) Router{
-    r := Router{}
-    r.BasePath = router.BasePath()
-    router.GET("/", r.Retrieve)
-    router.PUT("/", r.Update)
-    return r
+func ProfileRegister(router *gin.RouterGroup) {
+    router.GET("/:username", ProfileRetrieve)
+    router.POST("/:username/follow", ProfileFollow)
+    router.DELETE("/:username/follow", ProfileUnfollow)
 }
 
-
-func (r Router) Registration(c *gin.Context) {
-	db := c.MustGet("DB").(*gorm.DB)
-
-	var validator UserModelValidator
-	if err := common.Bind(c, &validator); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
-		return
-	}
-	var userModel UserModel
-	userModel.Username = validator.User.Username
-	userModel.Email = validator.User.Email
-	userModel.setPassword(validator.User.Password)
-	if err := db.Save(&userModel).Error; err != nil {
-		c.JSON(http.StatusUnprocessableEntity, common.NewError("database",err))
-		return
-	}
-    userModel.setToken()
-	c.JSON(http.StatusCreated, gin.H{"user": userModel})
-}
-
-func (r Router) Login(c *gin.Context) {
-	db := c.MustGet("DB").(*gorm.DB)
-	var validator LoginValidator
-	if err := common.Bind(c, &validator); err != nil {
-        c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
-		return
-	}
-	var userModel UserModel
-
-	if err := db.Where(&UserModel{Email: validator.User.Email}).First(&userModel).Error; err != nil {
-        c.JSON(http.StatusForbidden, common.NewError("login",errors.New("Not Registered email or invalid password")))
-		return
-	}
-	fmt.Println("user from DB: ", userModel)
-
-	err := userModel.checkPassword(validator.User.Password)
-	if err != nil {
-        c.JSON(http.StatusForbidden, common.NewError("login",errors.New("Not Registered email or invalid password")))
-		return
-	}
-    userModel.setToken()
-	c.JSON(http.StatusOK, gin.H{"user": userModel})
-}
-
-func (r Router) Retrieve(c *gin.Context) {
-    db := c.MustGet("DB").(*gorm.DB)
-    my_user_id := c.MustGet("my_user_id")
-
-    var userModel UserModel
-    if err := db.First(&userModel,my_user_id).Error; err != nil {
-        c.JSON(http.StatusUnprocessableEntity, common.NewError("database",err))
+func ProfileRetrieve(c *gin.Context) {
+    username := c.Param("username")
+    userModel, err := FindOneUser(&UserModel{Username: username})
+    if err != nil {
+        c.JSON(http.StatusNotFound, common.NewError("profile", errors.New("Invalid username")))
         return
     }
-    userModel.setToken()
-    c.JSON(http.StatusCreated, gin.H{"user": userModel})
+    myUserModel := c.MustGet("my_user_model").(UserModel)
+
+    profileSerializer := ProfileSerializer{userModel, myUserModel, myUserModel.isFollowing(userModel)}
+    c.JSON(http.StatusOK, gin.H{"profile": profileSerializer.Response()})
 }
-
-func (r Router) Update(c *gin.Context) {
-    db := c.MustGet("DB").(*gorm.DB)
-    my_user_id := c.MustGet("my_user_id")
-
-    var userModel UserModel
-    if err := db.First(&userModel,my_user_id).Error; err != nil {
-        c.JSON(http.StatusUnprocessableEntity, common.NewError("database",err))
+func ProfileFollow(c *gin.Context) {
+    username := c.Param("username")
+    userModel, err := FindOneUser(&UserModel{Username: username})
+    if err != nil {
+        c.JSON(http.StatusNotFound, common.NewError("profile", errors.New("Invalid username")))
         return
     }
-    var validator UserModelValidator
-    validator.User.Username = userModel.Username
-    validator.User.Email = userModel.Email
-    validator.User.Password = userModel.PasswordHash
-    validator.User.Bio = userModel.Bio
-    if userModel.Image!=nil{
-        validator.User.Image = *userModel.Image
+    myUserModel := c.MustGet("my_user_model").(UserModel)
+    err = SaveOne(&FollowModel{
+        Following:  myUserModel,
+        FollowedBy: userModel,
+    })
+    if err != nil {
+        c.JSON(http.StatusUnprocessableEntity, common.NewError("database", err))
+        return
     }
-    if err := common.Bind(c, &validator); err != nil {
+    profileSerializer := ProfileSerializer{userModel, myUserModel, true}
+    c.JSON(http.StatusOK, gin.H{"profile": profileSerializer.Response()})
+}
+
+func ProfileUnfollow(c *gin.Context) {
+    username := c.Param("username")
+    userModel, err := FindOneUser(&UserModel{Username: username})
+    if err != nil {
+        c.JSON(http.StatusNotFound, common.NewError("profile", errors.New("Invalid username")))
+        return
+    }
+    myUserModel := c.MustGet("my_user_model").(UserModel)
+
+    DeleteFollowModel(FollowModel{
+        FollowingID:  myUserModel.ID,
+        FollowedByID: userModel.ID,
+    })
+    profileSerializer := ProfileSerializer{userModel, myUserModel, false}
+    c.JSON(http.StatusOK, gin.H{"profile": profileSerializer.Response()})
+}
+
+func UsersRegistration(c *gin.Context) {
+    userModelValidator := NewUserModelValidator()
+    if err := userModelValidator.Bind(c); err != nil {
         c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
         return
     }
-    userModel.Username = validator.User.Username
-    userModel.Email = validator.User.Email
-    userModel.Bio = validator.User.Bio
-    userModel.Image = &validator.User.Image
 
-    if validator.User.Image==""{
-        userModel.Image = nil
-    }
-    if validator.User.Password!=userModel.PasswordHash{
-        userModel.setPassword(validator.User.Password)
-    }
-
-    if err := db.Save(&userModel).Error; err != nil {
-        c.JSON(http.StatusUnprocessableEntity, common.NewError("database",err))
+    if err := SaveOne(&userModelValidator.userModel); err != nil {
+        c.JSON(http.StatusUnprocessableEntity, common.NewError("database", err))
         return
     }
-    userModel.setToken()
-    c.JSON(http.StatusCreated, gin.H{"user": userModel})
+    userSerializer := UserSerializer{userModelValidator.userModel}
+    c.JSON(http.StatusCreated, gin.H{"user": userSerializer.Response()})
+}
+
+func UsersLogin(c *gin.Context) {
+    loginValidator := NewLoginValidator()
+    if err := loginValidator.Bind(c); err != nil {
+        c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
+        return
+    }
+    userModel, err := FindOneUser(&UserModel{Email: loginValidator.userModel.Email})
+
+    if err != nil {
+        c.JSON(http.StatusForbidden, common.NewError("login", errors.New("Not Registered email or invalid password")))
+        return
+    }
+
+    if userModel.checkPassword(loginValidator.User.Password) != nil {
+        c.JSON(http.StatusForbidden, common.NewError("login", errors.New("Not Registered email or invalid password")))
+        return
+    }
+    userSerializer := UserSerializer{userModel}
+    c.JSON(http.StatusCreated, gin.H{"user": userSerializer.Response()})
+}
+
+func UserRetrieve(c *gin.Context) {
+    userModel := c.MustGet("my_user_model").(UserModel)
+    userSerializer := UserSerializer{userModel}
+    c.JSON(http.StatusCreated, gin.H{"user": userSerializer.Response()})
+}
+
+func UserUpdate(c *gin.Context) {
+    myUserModel := c.MustGet("my_user_model").(UserModel)
+    userModelValidator := NewUserModelValidatorFillWith(myUserModel)
+    if err := userModelValidator.Bind(c); err != nil {
+        c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
+        return
+    }
+
+    if err := myUserModel.Update(userModelValidator.userModel); err != nil {
+        c.JSON(http.StatusUnprocessableEntity, common.NewError("database", err))
+        return
+    }
+    userSerializer := UserSerializer{myUserModel}
+    c.JSON(http.StatusCreated, gin.H{"user": userSerializer.Response()})
 }

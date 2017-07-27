@@ -6,27 +6,32 @@ import (
     "golang-gin-starter-kit/common"
     "golang-gin-starter-kit/middlewares"
     "golang-gin-starter-kit/users"
+    _ "fmt"
+    "fmt"
+    "github.com/jinzhu/gorm"
 )
+
+func Migrate(db *gorm.DB)  {
+    db.AutoMigrate(&users.UserModel{})
+    db.AutoMigrate(&users.FollowModel{})
+}
 
 
 func main() {
 
-	db := common.DatabaseConnection()
+	db := common.Init()
+    Migrate(db)
 	defer db.Close()
-
-    db.DB().SetMaxIdleConns(10)
-    db.AutoMigrate(&users.UserModel{})
 
 
     r := gin.Default()
-
-	r.Use(middlewares.DatabaseMiddleware(db))
 
     v1 := r.Group("/api")
     users.UsersRegister(v1.Group("/users"))
 
     v1.Use(middlewares.Auth())
     users.UserRegister(v1.Group("/user"))
+    users.ProfileRegister(v1.Group("/profiles"))
 
 
     testAuth := r.Group("/api/ping")
@@ -36,6 +41,21 @@ func main() {
             "message": "pong",
         })
     })
+
+    // test 1 to 1
+    tx1 := db.Begin()
+    tx1.Save(&users.UserModel{
+        Username:"AAAAAAAAAAAAAAAA",
+        Email:"aaaa@g.cn",
+        Bio:"hehddeda",
+        Image: nil,
+    })
+    tx1.Commit()
+    var userA users.UserModel
+    fmt.Println(userA)
+
+
+
 
 	r.Run() // listen and serve on 0.0.0.0:8080
 }

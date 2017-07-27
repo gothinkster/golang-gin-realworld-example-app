@@ -71,16 +71,6 @@ func TestUsermodel(t *testing.T) {
     assertUserModel(t,userModel)
 }
 
-func TestRegister(t *testing.T) {
-    assert := assert.New(t)
-
-    r := gin.New()
-    const path string = "/api/users"
-
-    usersGroup := r.Group(path)
-    router := UsersRegister(usersGroup)
-    assert.Equal(path,router.BasePath,"Base path should be set")
-}
 
 var test_db *gorm.DB
 
@@ -124,7 +114,6 @@ func TestRouter_Registration(t *testing.T) {
 
     r := gin.New()
     usersGroup := r.Group("/p")
-    usersGroup.Use(middlewares.DatabaseMiddleware(test_db))
     UsersRegister(usersGroup)
     for _, testData := range routerRegistrationTests{
         bodyData := testData.bodyData

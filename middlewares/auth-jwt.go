@@ -8,6 +8,7 @@ import (
     "github.com/dgrijalva/jwt-go/request"
     "golang-gin-starter-kit/common"
     "strings"
+    "golang-gin-starter-kit/users"
 )
 // Strips 'Bearer ' prefix from bearer token string
 func stripBearerPrefixFromTokenString(tok string) (string, error) {
@@ -45,11 +46,17 @@ func Auth() gin.HandlerFunc {
             return
         }
         if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-            my_user_id := uint64(claims["id"].(float64))
+            my_user_id := uint(claims["id"].(float64))
             //fmt.Println(my_user_id,claims["id"])
             c.Set("my_user_id", my_user_id)
+
+            db := common.GetDB()
+            var myUserModel users.UserModel
+            db.First(&myUserModel,my_user_id)
+            c.Set("my_user_model", myUserModel)
+
         } else {
-            c.Set("my_user_id", uint64(0))
+            c.Set("my_user_id", uint(0))
         }
     }
 }
