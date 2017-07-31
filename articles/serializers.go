@@ -11,6 +11,15 @@ type ArticleSerializer struct {
     ArticleModel
 }
 
+
+type TagSerializer struct {
+    TagModel
+}
+
+func (self *TagSerializer) Response() string {
+    return self.TagModel.Tag
+}
+
 type ArticleResponse struct {
     ID              uint        `json:"-"`
     Title           string      `json:"title"`
@@ -20,10 +29,11 @@ type ArticleResponse struct {
     CreatedAt       string      `json:"createdAt"`
     UpdatedAt       string      `json:"updatedAt"`
     Author          users.ProfileResponse `json:"author"`
+    Tags            []string    `json:"tagList"`
 }
 
 func (self *ArticleSerializer) Response() ArticleResponse {
-    author := users.ProfileSerializer{self.C,self.Author}
+    authorSerializer := users.ProfileSerializer{self.C,self.Author}
     article := ArticleResponse{
         ID:             self.ID,
         Slug:           slug.Make(self.Title),
@@ -31,9 +41,13 @@ func (self *ArticleSerializer) Response() ArticleResponse {
         Description:    self.Description,
         Body:           self.Body,
         CreatedAt:      self.CreatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
-        UpdatedAt:      self.UpdatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
-        Author:         author.Response(),
         //UpdatedAt:      self.UpdatedAt.UTC().Format(time.RFC3339Nano),
+        UpdatedAt:      self.UpdatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
+        Author:         authorSerializer.Response(),
+    }
+    for _, tag := range self.Tags {
+        tagSerializer := TagSerializer{tag}
+        article.Tags = append(article.Tags, tagSerializer.Response())
     }
     return article
 }

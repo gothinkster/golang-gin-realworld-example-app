@@ -16,6 +16,7 @@ func Migrate(db *gorm.DB)  {
     db.AutoMigrate(&users.UserModel{})
     db.AutoMigrate(&users.FollowModel{})
     db.AutoMigrate(&articles.ArticleModel{})
+    db.AutoMigrate(&articles.TagModel{})
 }
 
 

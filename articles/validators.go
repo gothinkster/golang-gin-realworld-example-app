@@ -11,6 +11,7 @@ type ArticleModelValidator struct {
         Title       string      `form:"title" json:"title" binding:"exists,min=4"`
         Description string      `form:"description" json:"description" binding:"max=2048"`
         Body        string      `form:"body" json:"body" binding:"max=2048"`
+        Tags        []string    `form:"tagList" json:"tagList"`
     } `json:"article"`
     articleModel ArticleModel   `json:"-"`
 }
@@ -30,7 +31,6 @@ func (self *ArticleModelValidator) Bind(c *gin.Context) error {
     self.articleModel.Description = self.Article.Description
     self.articleModel.Body = self.Article.Body
     self.articleModel.Author = myUserModel
-
-
+    self.articleModel.setTags(self.Article.Tags)
     return nil
 }
