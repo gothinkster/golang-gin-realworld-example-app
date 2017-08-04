@@ -43,16 +43,6 @@ func (u *UserModel) checkPassword(password string) error {
     return bcrypt.CompareHashAndPassword(byteHashedPassword, bytePassword)
 }
 
-func (u UserModel) isFollowing(v UserModel) bool {
-    db := common.GetDB()
-    var follow FollowModel
-    db.Where(FollowModel{
-        FollowingID:  u.ID,
-        FollowedByID: v.ID,
-    }).First(&follow)
-    return follow.ID != 0
-}
-
 func FindOneUser(condition interface{}) (UserModel, error) {
     db := common.GetDB()
     var model UserModel
@@ -75,5 +65,34 @@ func (model *UserModel) Update(data interface{}) error {
 func DeleteFollowModel(condition interface{}) error {
     db := common.GetDB()
     err := db.Where(condition).Delete(FollowModel{}).Error
+    return err
+}
+
+func (u UserModel) following(v UserModel) error {
+    db := common.GetDB()
+    var follow FollowModel
+    err := db.FirstOrCreate(&follow, &FollowModel{
+        FollowingID:  u.ID,
+        FollowedByID: v.ID,
+    }).Error
+    return err
+}
+
+func (u UserModel) isFollowing(v UserModel) bool {
+    db := common.GetDB()
+    var follow FollowModel
+    db.Where(FollowModel{
+        FollowingID:  u.ID,
+        FollowedByID: v.ID,
+    }).First(&follow)
+    return follow.ID != 0
+}
+
+func (u UserModel) unFollowing(v UserModel) error {
+    db := common.GetDB()
+    err := db.Where(FollowModel{
+        FollowingID:  u.ID,
+        FollowedByID: v.ID,
+    }).Delete(FollowModel{}).Error
     return err
 }

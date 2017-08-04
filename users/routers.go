@@ -41,10 +41,7 @@ func ProfileFollow(c *gin.Context) {
         return
     }
     myUserModel := c.MustGet("my_user_model").(UserModel)
-    err = SaveOne(&FollowModel{
-        Following:  myUserModel,
-        FollowedBy: userModel,
-    })
+    err = myUserModel.following(userModel)
     if err != nil {
         c.JSON(http.StatusUnprocessableEntity, common.NewError("database", err))
         return
@@ -62,10 +59,11 @@ func ProfileUnfollow(c *gin.Context) {
     }
     myUserModel := c.MustGet("my_user_model").(UserModel)
 
-    DeleteFollowModel(FollowModel{
-        FollowingID:  myUserModel.ID,
-        FollowedByID: userModel.ID,
-    })
+    err = myUserModel.unFollowing(userModel)
+    if err != nil {
+        c.JSON(http.StatusUnprocessableEntity, common.NewError("database", err))
+        return
+    }
     profileSerializer := ProfileSerializer{c, userModel}
     c.JSON(http.StatusOK, gin.H{"profile": profileSerializer.Response()})
 }

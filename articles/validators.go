@@ -4,6 +4,7 @@ import (
     "golang-gin-starter-kit/common"
     "gopkg.in/gin-gonic/gin.v1"
     "golang-gin-starter-kit/users"
+    "github.com/gosimple/slug"
 )
 
 type ArticleModelValidator struct {
@@ -20,6 +21,18 @@ func NewArticleModelValidator() ArticleModelValidator {
     return ArticleModelValidator{};
 }
 
+
+func NewArticleModelValidatorFillWith(articleModel ArticleModel) ArticleModelValidator{
+    articleModelValidator := NewArticleModelValidator()
+    articleModelValidator.Article.Title = articleModel.Title
+    articleModelValidator.Article.Description = articleModel.Description
+    articleModelValidator.Article.Body = articleModel.Body
+    for _, tagModel := range articleModel.Tags{
+        articleModelValidator.Article.Tags = append(articleModelValidator.Article.Tags, tagModel.Tag)
+    }
+    return articleModelValidator
+}
+
 func (self *ArticleModelValidator) Bind(c *gin.Context) error {
     myUserModel := c.MustGet("my_user_model").(users.UserModel)
 
@@ -27,6 +40,7 @@ func (self *ArticleModelValidator) Bind(c *gin.Context) error {
     if err != nil {
         return err
     }
+    self.articleModel.Slug = slug.Make(self.Article.Title)
     self.articleModel.Title = self.Article.Title
     self.articleModel.Description = self.Article.Description
     self.articleModel.Body = self.Article.Body
