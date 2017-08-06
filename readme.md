@@ -19,5 +19,20 @@ For more information on how to this works with other frontends/backends, head ov
 
 # Getting started
 
-> npm install, npm start, etc.
+## Install the Golang
+https://golang.org/doc/install
+## Environment Config
+make sure your ~/.*shrc have those varible:
+```
+➜  src echo $GOPATH
+/Users/zitwang/test/
+➜  src echo $GOROOT
+/usr/local/go/
+➜  src echo $PATH
+...:/usr/local/go/bin:/Users/zitwang/test//bin:/usr/local/go//bin
+```
+## Install Govendor & Fresh
+I used Govendor manage the package, and Fresh can help build without reload
+https://github.com/kardianos/govendor
+https://github.com/pilu/fresh
 

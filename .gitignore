@@ -16,7 +16,7 @@
 .DS_Store
 Thumbs.db
 
-vendor/
+vendor/*
 !vendor/vendor.json
 
 tmp/*
