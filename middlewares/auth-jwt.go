@@ -35,14 +35,18 @@ var MyAuth2Extractor = &request.MultiExtractor{
 
 
 
-func Auth() gin.HandlerFunc {
+func Auth(auto401 bool) gin.HandlerFunc {
     return func(c *gin.Context) {
+        var myUserModel users.UserModel
+        c.Set("my_user_model", myUserModel)
         token, err := request.ParseFromRequest(c.Request, MyAuth2Extractor, func(token *jwt.Token) (interface{}, error) {
             b := ([]byte(common.NBSecretPassword))
             return b, nil
         })
         if err != nil {
-            c.AbortWithError(http.StatusUnauthorized, err)
+            if auto401 {
+                c.AbortWithError(http.StatusUnauthorized, err)
+            }
             return
         }
         if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
@@ -51,12 +55,9 @@ func Auth() gin.HandlerFunc {
             c.Set("my_user_id", my_user_id)
 
             db := common.GetDB()
-            var myUserModel users.UserModel
             db.First(&myUserModel,my_user_id)
             c.Set("my_user_model", myUserModel)
 
-        } else {
-            c.Set("my_user_id", uint(0))
         }
     }
 }

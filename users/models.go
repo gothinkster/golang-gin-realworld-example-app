@@ -72,8 +72,8 @@ func (u UserModel) following(v UserModel) error {
     db := common.GetDB()
     var follow FollowModel
     err := db.FirstOrCreate(&follow, &FollowModel{
-        FollowingID:  u.ID,
-        FollowedByID: v.ID,
+        FollowingID:  v.ID,
+        FollowedByID: u.ID,
     }).Error
     return err
 }
@@ -82,8 +82,8 @@ func (u UserModel) isFollowing(v UserModel) bool {
     db := common.GetDB()
     var follow FollowModel
     db.Where(FollowModel{
-        FollowingID:  u.ID,
-        FollowedByID: v.ID,
+        FollowingID:  v.ID,
+        FollowedByID: u.ID,
     }).First(&follow)
     return follow.ID != 0
 }
@@ -91,8 +91,25 @@ func (u UserModel) isFollowing(v UserModel) bool {
 func (u UserModel) unFollowing(v UserModel) error {
     db := common.GetDB()
     err := db.Where(FollowModel{
-        FollowingID:  u.ID,
-        FollowedByID: v.ID,
+        FollowingID:  v.ID,
+        FollowedByID: u.ID,
     }).Delete(FollowModel{}).Error
     return err
+}
+
+func (u UserModel) GetFollowings() []UserModel {
+    db := common.GetDB()
+    tx := db.Begin()
+    var follows []FollowModel
+    var followings []UserModel
+    tx.Where(FollowModel{
+        FollowedByID: u.ID,
+    }).Find(&follows)
+    for _, follow := range follows{
+        var userModel UserModel
+        tx.Model(&follow).Related(&userModel,"Following")
+        followings = append(followings, userModel)
+    }
+    tx.Commit()
+    return followings
 }

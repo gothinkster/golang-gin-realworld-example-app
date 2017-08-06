@@ -18,7 +18,10 @@ func Migrate(db *gorm.DB)  {
     db.AutoMigrate(&articles.ArticleModel{})
     db.AutoMigrate(&articles.TagModel{})
     db.AutoMigrate(&articles.FavoriteModel{})
+    db.AutoMigrate(&articles.ArticleUserModel{})
+    db.AutoMigrate(&articles.CommentModel{})
 }
+
 
 
 func main() {
@@ -32,8 +35,11 @@ func main() {
 
     v1 := r.Group("/api")
     users.UsersRegister(v1.Group("/users"))
+    v1.Use(middlewares.Auth(false))
+    articles.ArticlesAnonymousRegister(v1.Group("/articles"))
+    articles.TagsAnonymousRegister(v1.Group("/tags"))
 
-    v1.Use(middlewares.Auth())
+    v1.Use(middlewares.Auth(true))
     users.UserRegister(v1.Group("/user"))
     users.ProfileRegister(v1.Group("/profiles"))
 
@@ -50,15 +56,26 @@ func main() {
 
     // test 1 to 1
     tx1 := db.Begin()
-    tx1.Save(&users.UserModel{
+    userA := users.UserModel{
         Username:"AAAAAAAAAAAAAAAA",
         Email:"aaaa@g.cn",
         Bio:"hehddeda",
         Image: nil,
-    })
+    }
+    tx1.Save(&userA)
     tx1.Commit()
-    var userA users.UserModel
     fmt.Println(userA)
+
+    //db.Save(&ArticleUserModel{
+    //    UserModelID:userA.ID,
+    //})
+    //var userAA ArticleUserModel
+    //db.Where(&ArticleUserModel{
+    //    UserModelID:userA.ID,
+    //}).First(&userAA)
+    //fmt.Println(userAA)
+
+
 
 
 	r.Run() // listen and serve on 0.0.0.0:8080
