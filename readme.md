@@ -12,7 +12,7 @@ This codebase was created to demonstrate a fully fledged fullstack application b
 ├── gorm.db
 ├── hello.go
 ├── common
-    ├── utils.go        //small tools function
+│   ├── utils.go        //small tools function
 │   └── database.go     //DB connect manager
 ├── middlewares
 │   └── auth-jwt.go
@@ -59,3 +59,4 @@ go get -u github.com/pilu/fresh
 - Test coverage
 - ProtoBuf support
 - Code structure optimize
+- Continuous integration
