@@ -1,9 +1,9 @@
 # ![RealWorld Example App](logo.png)
 
-> ### [GOLANG GIN] codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld) spec and API.
+> ### Golang/Gin codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld) spec and API.
 
 
-This codebase was created to demonstrate a fully fledged fullstack application built with **[golang-gin-starter-kit]** including CRUD operations, authentication, routing, pagination, and more.
+This codebase was created to demonstrate a fully fledged fullstack application built with **Golang/Gin** including CRUD operations, authentication, routing, pagination, and more.
 
 
 # How it works
