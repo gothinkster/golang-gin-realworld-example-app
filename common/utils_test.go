@@ -10,7 +10,7 @@ import (
 
 func TestDatabaseConnection(t *testing.T) {
 	assert := assert.New(t)
-	db := DatabaseConnection()
+	db := Init()
 	defer db.Close()
 
 	test_db, _ := gorm.Open("sqlite3", "./../gorm_test.db")
@@ -28,7 +28,7 @@ func TestRandString(t *testing.T) {
 
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	str := RandString(0)
-	assert.Equal(len(str), 0, "length should be 0")
+	assert.Equal(str, "", "length should be ''")
 
 	str = RandString(10)
 	assert.Equal(len(str), 10, "length should be 10")
@@ -40,8 +40,7 @@ func TestRandString(t *testing.T) {
 func TestGenToken(t *testing.T) {
 	assert := assert.New(t)
 
-	token, err := GenToken(2)
-	assert.NoError(err, "Db should be able to ping")
+	token := GenToken(2)
 
 	assert.IsType(token, string("token"), "token type should be string")
 	assert.Len(token, 115, "JWT's length should be 115")
