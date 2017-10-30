@@ -103,7 +103,7 @@ func UsersLogin(c *gin.Context) {
 	}
 	c.Set("my_user_model", userModel)
 	userSerializer := UserSerializer{c}
-	c.JSON(http.StatusCreated, gin.H{"user": userSerializer.Response()})
+	c.JSON(http.StatusOK, gin.H{"user": userSerializer.Response()})
 }
 
 func UserRetrieve(c *gin.Context) {

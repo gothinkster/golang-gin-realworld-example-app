@@ -13,8 +13,7 @@ import (
 )
 
 func Migrate(db *gorm.DB) {
-	db.AutoMigrate(&users.UserModel{})
-	db.AutoMigrate(&users.FollowModel{})
+	users.AutoMigrate()
 	db.AutoMigrate(&articles.ArticleModel{})
 	db.AutoMigrate(&articles.TagModel{})
 	db.AutoMigrate(&articles.FavoriteModel{})

@@ -39,6 +39,14 @@ type FollowModel struct {
 	FollowedByID uint
 }
 
+// Migrate the schema of database if needed
+func AutoMigrate() {
+	db := common.GetDB()
+
+	db.AutoMigrate(&UserModel{})
+	db.AutoMigrate(&FollowModel{})
+}
+
 // What's bcrypt? https://en.wikipedia.org/wiki/Bcrypt
 // Golang bcrypt doc: https://godoc.org/golang.org/x/crypto/bcrypt
 // You can change the value in bcrypt.DefaultCost to adjust the security index.
@@ -71,7 +79,7 @@ func FindOneUser(condition interface{}) (UserModel, error) {
 	var model UserModel
 	err := db.Where(condition).First(&model).Error
 	return model, err
-};
+}
 
 // You could input an UserModel which will be saved in database returning with error info
 // 	if err := SaveOne(&userModel); err != nil { ... }
