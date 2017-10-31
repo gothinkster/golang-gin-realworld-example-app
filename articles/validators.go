@@ -32,19 +32,19 @@ func NewArticleModelValidatorFillWith(articleModel ArticleModel) ArticleModelVal
 	return articleModelValidator
 }
 
-func (self *ArticleModelValidator) Bind(c *gin.Context) error {
+func (s *ArticleModelValidator) Bind(c *gin.Context) error {
 	myUserModel := c.MustGet("my_user_model").(users.UserModel)
 
-	err := common.Bind(c, self)
+	err := common.Bind(c, s)
 	if err != nil {
 		return err
 	}
-	self.articleModel.Slug = slug.Make(self.Article.Title)
-	self.articleModel.Title = self.Article.Title
-	self.articleModel.Description = self.Article.Description
-	self.articleModel.Body = self.Article.Body
-	self.articleModel.Author = GetArticleUserModel(myUserModel)
-	self.articleModel.setTags(self.Article.Tags)
+	s.articleModel.Slug = slug.Make(s.Article.Title)
+	s.articleModel.Title = s.Article.Title
+	s.articleModel.Description = s.Article.Description
+	s.articleModel.Body = s.Article.Body
+	s.articleModel.Author = GetArticleUserModel(myUserModel)
+	s.articleModel.setTags(s.Article.Tags)
 	return nil
 }
 
@@ -59,14 +59,14 @@ func NewCommentModelValidator() CommentModelValidator {
 	return CommentModelValidator{}
 }
 
-func (self *CommentModelValidator) Bind(c *gin.Context) error {
+func (s *CommentModelValidator) Bind(c *gin.Context) error {
 	myUserModel := c.MustGet("my_user_model").(users.UserModel)
 
-	err := common.Bind(c, self)
+	err := common.Bind(c, s)
 	if err != nil {
 		return err
 	}
-	self.commentModel.Body = self.Comment.Body
-	self.commentModel.Author = GetArticleUserModel(myUserModel)
+	s.commentModel.Body = s.Comment.Body
+	s.commentModel.Author = GetArticleUserModel(myUserModel)
 	return nil
 }

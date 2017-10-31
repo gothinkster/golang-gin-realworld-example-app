@@ -16,14 +16,14 @@ type TagsSerializer struct {
 	Tags []TagModel
 }
 
-func (self *TagSerializer) Response() string {
-	return self.TagModel.Tag
+func (s *TagSerializer) Response() string {
+	return s.TagModel.Tag
 }
 
-func (self *TagsSerializer) Response() []string {
+func (s *TagsSerializer) Response() []string {
 	response := []string{}
-	for _, tag := range self.Tags {
-		serializer := TagSerializer{self.C, tag}
+	for _, tag := range s.Tags {
+		serializer := TagSerializer{s.C, tag}
 		response = append(response, serializer.Response())
 	}
 	return response
@@ -34,8 +34,8 @@ type ArticleUserSerializer struct {
 	ArticleUserModel
 }
 
-func (self *ArticleUserSerializer) Response() users.ProfileResponse {
-	response := users.ProfileSerializer{self.C, self.ArticleUserModel.UserModel}
+func (s *ArticleUserSerializer) Response() users.ProfileResponse {
+	response := users.ProfileSerializer{s.C, s.ArticleUserModel.UserModel}
 	return response.Response()
 }
 
@@ -63,34 +63,34 @@ type ArticlesSerializer struct {
 	Articles []ArticleModel
 }
 
-func (self *ArticleSerializer) Response() ArticleResponse {
-	myUserModel := self.C.MustGet("my_user_model").(users.UserModel)
-	authorSerializer := ArticleUserSerializer{self.C, self.Author}
+func (s *ArticleSerializer) Response() ArticleResponse {
+	myUserModel := s.C.MustGet("my_user_model").(users.UserModel)
+	authorSerializer := ArticleUserSerializer{s.C, s.Author}
 	response := ArticleResponse{
-		ID:          self.ID,
-		Slug:        slug.Make(self.Title),
-		Title:       self.Title,
-		Description: self.Description,
-		Body:        self.Body,
-		CreatedAt:   self.CreatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
-		//UpdatedAt:      self.UpdatedAt.UTC().Format(time.RFC3339Nano),
-		UpdatedAt:      self.UpdatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
+		ID:          s.ID,
+		Slug:        slug.Make(s.Title),
+		Title:       s.Title,
+		Description: s.Description,
+		Body:        s.Body,
+		CreatedAt:   s.CreatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
+		//UpdatedAt:      s.UpdatedAt.UTC().Format(time.RFC3339Nano),
+		UpdatedAt:      s.UpdatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
 		Author:         authorSerializer.Response(),
-		Favorite:       self.isFavoriteBy(GetArticleUserModel(myUserModel)),
-		FavoritesCount: self.favoritesCount(),
+		Favorite:       s.isFavoriteBy(GetArticleUserModel(myUserModel)),
+		FavoritesCount: s.favoritesCount(),
 	}
 	response.Tags = make([]string, 0)
-	for _, tag := range self.Tags {
-		serializer := TagSerializer{self.C, tag}
+	for _, tag := range s.Tags {
+		serializer := TagSerializer{s.C, tag}
 		response.Tags = append(response.Tags, serializer.Response())
 	}
 	return response
 }
 
-func (self *ArticlesSerializer) Response() []ArticleResponse {
+func (s *ArticlesSerializer) Response() []ArticleResponse {
 	response := []ArticleResponse{}
-	for _, article := range self.Articles {
-		serializer := ArticleSerializer{self.C, article}
+	for _, article := range s.Articles {
+		serializer := ArticleSerializer{s.C, article}
 		response = append(response, serializer.Response())
 	}
 	return response
@@ -114,22 +114,22 @@ type CommentResponse struct {
 	Author    users.ProfileResponse `json:"author"`
 }
 
-func (self *CommentSerializer) Response() CommentResponse {
-	authorSerializer := ArticleUserSerializer{self.C, self.Author}
+func (s *CommentSerializer) Response() CommentResponse {
+	authorSerializer := ArticleUserSerializer{s.C, s.Author}
 	response := CommentResponse{
-		ID:        self.ID,
-		Body:      self.Body,
-		CreatedAt: self.CreatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
-		UpdatedAt: self.UpdatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
+		ID:        s.ID,
+		Body:      s.Body,
+		CreatedAt: s.CreatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
+		UpdatedAt: s.UpdatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
 		Author:    authorSerializer.Response(),
 	}
 	return response
 }
 
-func (self *CommentsSerializer) Response() []CommentResponse {
+func (s *CommentsSerializer) Response() []CommentResponse {
 	response := []CommentResponse{}
-	for _, comment := range self.Comments {
-		serializer := CommentSerializer{self.C, comment}
+	for _, comment := range s.Comments {
+		serializer := CommentSerializer{s.C, comment}
 		response = append(response, serializer.Response())
 	}
 	return response
