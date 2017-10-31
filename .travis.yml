@@ -6,9 +6,7 @@ go:
   - 1.8.x
 #  - master
 
-go_import_path:
-  - github.com/wangzitian0/golang-gin-starter-kit
-  - github.com/wangzitian0/golang-gin-starter-kit/users
+go_import_path: github.com/wangzitian0/golang-gin-starter-kit
 
 install:
   - echo $GOPATH
