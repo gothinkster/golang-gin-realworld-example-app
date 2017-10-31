@@ -3,8 +3,8 @@ package articles
 import (
 	_ "fmt"
 	"github.com/jinzhu/gorm"
-	"golang-gin-starter-kit/common"
-	"golang-gin-starter-kit/users"
+	"github.com/wangzitian0/golang-gin-starter-kit/common"
+	"github.com/wangzitian0/golang-gin-starter-kit/users"
 	"strconv"
 )
 

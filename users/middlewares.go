@@ -3,7 +3,7 @@ package users
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
-	"golang-gin-starter-kit/common"
+	"github.com/wangzitian0/golang-gin-starter-kit/common"
 	"gopkg.in/gin-gonic/gin.v1"
 	"net/http"
 	"strings"
@@ -32,7 +32,7 @@ var MyAuth2Extractor = &request.MultiExtractor{
 	request.ArgumentExtractor{"access_token"},
 }
 
-func UpdateContextUserModel(c *gin.Context, my_user_id uint){
+func UpdateContextUserModel(c *gin.Context, my_user_id uint) {
 	var myUserModel UserModel
 	if my_user_id != 0 {
 		db := common.GetDB()

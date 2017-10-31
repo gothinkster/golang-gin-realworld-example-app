@@ -3,7 +3,7 @@ package users
 import (
 	"errors"
 	"github.com/jinzhu/gorm"
-	"golang-gin-starter-kit/common"
+	"github.com/wangzitian0/golang-gin-starter-kit/common"
 	"golang.org/x/crypto/bcrypt"
 )
 
