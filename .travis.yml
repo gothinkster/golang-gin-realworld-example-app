@@ -8,13 +8,17 @@ go:
 
 go_import_path: github.com/wangzitian0/golang-gin-starter-kit
 
+services:
+  - sqlite3
+
 install:
-  - echo $GOPATH
-  - ls
-  - pwd
-  - ls $GOPATH/src
-  - go get -u github.com/kardianos/govendor
-  - ls $GOPATH/src
-  - govendor sync
+  - go get -u github.com/wangzitian0/golang-gin-starter-kit
+#  - echo $GOPATH
+#  - ls
+#  - pwd
+#  - ls $GOPATH/src
+#  - go get -u github.com/kardianos/govendor
+#  - ls $GOPATH/src
+#  - govendor sync
 script:
   - go test -v ./...
