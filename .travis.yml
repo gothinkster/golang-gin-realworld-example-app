@@ -13,12 +13,12 @@ services:
 
 install:
   - go get -u github.com/wangzitian0/golang-gin-starter-kit
+  - go get -u github.com/kardianos/govendor
   - govendor sync
 #  - echo $GOPATH
 #  - ls
 #  - pwd
 #  - ls $GOPATH/src
-#  - go get -u github.com/kardianos/govendor
 #  - ls $GOPATH/src
 script:
   - go test -v ./...

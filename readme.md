@@ -1,5 +1,9 @@
 # ![RealWorld Example App](logo.png)
 
+
+[![Build Status](https://travis-ci.org/wangzitian0/golang-gin-starter-kit.svg?branch=master)](https://travis-ci.org/wangzitian0/golang-gin-starter-kit)
+
+
 > ### Golang/Gin codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld) spec and API.
 
 
@@ -43,7 +47,7 @@ https://github.com/kardianos/govendor
 
 https://github.com/pilu/fresh
 ```
-cd golang-gin-starter-kit/
+cd 
 go get -u github.com/kardianos/govendor
 go get -u github.com/pilu/fresh
 ```
