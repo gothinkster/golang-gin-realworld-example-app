@@ -8,11 +8,10 @@ go:
 
 install:
   - go get -u github.com/kardianos/govendor
-  - go get -u github.com/wangzitian0/golang-gin-starter-kit
   - echo $GOPATH
   - ls
   - pwd
+  - cd $GOPATH/src/github.com/wangzitian0/golang-gin-starter-kit/
   - govendor sync
-  - cd $GOPATH/src/github.com/wangzitian0/how-to-add-badge-in-github-readme
 script:
   - go test ./...
