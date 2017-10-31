@@ -1,17 +1,18 @@
 language: go
 
 go:
-  - 1.x
-  - 1.7
+#  - 1.x
+#  - 1.7
   - 1.8.x
-  - master
+#  - master
 
 install:
   - echo $GOPATH
   - ls
   - pwd
-  - ls $GOPATH/src
+  - cd $GOPATH/src
   - go get -u github.com/kardianos/govendor
   - govendor sync
+  - ls $GOPATH/src
 script:
   - go test ./...
