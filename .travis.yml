@@ -6,9 +6,4 @@ go:
   - 1.8.x
   - master
 
-go_import_path: github.com/wangzitian0/golang-gin-starter-kit
-
-
-before_install:
-
 script: go get -u github.com/kardianos/govendor && govendor sync && go test ./...
