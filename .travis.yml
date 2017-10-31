@@ -6,13 +6,15 @@ go:
   - 1.8.x
 #  - master
 
+go_import_path: github.com/wangzitian0/golang-gin-starter-kit
+
 install:
   - echo $GOPATH
   - ls
   - pwd
-  - cd $GOPATH/src
-  - go get -u github.com/kardianos/govendor
-  - govendor sync
   - ls $GOPATH/src
+  - go get -u github.com/kardianos/govendor
+  - ls $GOPATH/src
+  - govendor sync
 script:
-  - go test ./...
+  - go test -v ./...
