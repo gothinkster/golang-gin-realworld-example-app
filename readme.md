@@ -14,12 +14,11 @@ This codebase was created to demonstrate a fully fledged fullstack application b
 ├── common
 │   ├── utils.go        //small tools function
 │   └── database.go     //DB connect manager
-├── middlewares
-│   └── auth-jwt.go
 └── users
     ├── models.go       //data models define & DB operation
     ├── serializers.go  //response computing & format
     ├── routers.go      //business logic & router binding
+    ├── middlewares.go  //put the before & after logic of handle request
     └── validators.go   //form/json checker
 ```
 
@@ -44,6 +43,7 @@ https://github.com/kardianos/govendor
 
 https://github.com/pilu/fresh
 ```
+cd golang-gin-starter-kit/
 go get -u github.com/kardianos/govendor
 go get -u github.com/pilu/fresh
 ```
@@ -52,6 +52,11 @@ go get -u github.com/pilu/fresh
 ```
 ➜  govendor sync
 ➜  fresh
+```
+
+## Testing
+```
+➜  go test -v ./... -cover
 ```
 
 ## Todo

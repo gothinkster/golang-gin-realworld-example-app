@@ -107,6 +107,7 @@ func ArticleUpdate(c *gin.Context) {
 		return
 	}
 
+	articleModelValidator.articleModel.ID = articleModel.ID
 	if err := articleModel.Update(articleModelValidator.articleModel); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, common.NewError("database", err))
 		return

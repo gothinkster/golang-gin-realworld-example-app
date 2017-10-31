@@ -8,7 +8,6 @@ import (
 	"github.com/jinzhu/gorm"
 	"golang-gin-starter-kit/articles"
 	"golang-gin-starter-kit/common"
-	"golang-gin-starter-kit/middlewares"
 	"golang-gin-starter-kit/users"
 )
 
@@ -31,11 +30,11 @@ func main() {
 
 	v1 := r.Group("/api")
 	users.UsersRegister(v1.Group("/users"))
-	v1.Use(middlewares.Auth(false))
+	v1.Use(users.AuthMiddleware(false))
 	articles.ArticlesAnonymousRegister(v1.Group("/articles"))
 	articles.TagsAnonymousRegister(v1.Group("/tags"))
 
-	v1.Use(middlewares.Auth(true))
+	v1.Use(users.AuthMiddleware(true))
 	users.UserRegister(v1.Group("/user"))
 	users.ProfileRegister(v1.Group("/profiles"))
 

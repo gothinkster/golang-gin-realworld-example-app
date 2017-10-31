@@ -46,8 +46,8 @@ func ProfileFollow(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewError("database", err))
 		return
 	}
-	profileSerializer := ProfileSerializer{c, userModel}
-	c.JSON(http.StatusOK, gin.H{"profile": profileSerializer.Response()})
+	serializer := ProfileSerializer{c, userModel}
+	c.JSON(http.StatusOK, gin.H{"profile": serializer.Response()})
 }
 
 func ProfileUnfollow(c *gin.Context) {
@@ -64,8 +64,8 @@ func ProfileUnfollow(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewError("database", err))
 		return
 	}
-	profileSerializer := ProfileSerializer{c, userModel}
-	c.JSON(http.StatusOK, gin.H{"profile": profileSerializer.Response()})
+	serializer := ProfileSerializer{c, userModel}
+	c.JSON(http.StatusOK, gin.H{"profile": serializer.Response()})
 }
 
 func UsersRegistration(c *gin.Context) {
@@ -80,8 +80,8 @@ func UsersRegistration(c *gin.Context) {
 		return
 	}
 	c.Set("my_user_model", userModelValidator.userModel)
-	userSerializer := UserSerializer{c}
-	c.JSON(http.StatusCreated, gin.H{"user": userSerializer.Response()})
+	serializer := UserSerializer{c}
+	c.JSON(http.StatusCreated, gin.H{"user": serializer.Response()})
 }
 
 func UsersLogin(c *gin.Context) {
@@ -101,14 +101,14 @@ func UsersLogin(c *gin.Context) {
 		c.JSON(http.StatusForbidden, common.NewError("login", errors.New("Not Registered email or invalid password")))
 		return
 	}
-	c.Set("my_user_model", userModel)
-	userSerializer := UserSerializer{c}
-	c.JSON(http.StatusOK, gin.H{"user": userSerializer.Response()})
+	UpdateContextUserModel(c, userModel.ID)
+	serializer := UserSerializer{c}
+	c.JSON(http.StatusOK, gin.H{"user": serializer.Response()})
 }
 
 func UserRetrieve(c *gin.Context) {
-	userSerializer := UserSerializer{c}
-	c.JSON(http.StatusCreated, gin.H{"user": userSerializer.Response()})
+	serializer := UserSerializer{c}
+	c.JSON(http.StatusOK, gin.H{"user": serializer.Response()})
 }
 
 func UserUpdate(c *gin.Context) {
@@ -123,6 +123,7 @@ func UserUpdate(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewError("database", err))
 		return
 	}
-	userSerializer := UserSerializer{c}
-	c.JSON(http.StatusCreated, gin.H{"user": userSerializer.Response()})
+	UpdateContextUserModel(c, myUserModel.ID)
+	serializer := UserSerializer{c}
+	c.JSON(http.StatusOK, gin.H{"user": serializer.Response()})
 }
