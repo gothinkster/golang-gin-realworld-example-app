@@ -7,11 +7,11 @@ go:
   - master
 
 install:
-  - go get -u github.com/kardianos/govendor
   - echo $GOPATH
   - ls
   - pwd
-  - cd $GOPATH/src/github.com/wangzitian0/golang-gin-starter-kit/
+  - ls $GOPATH/src
+  - go get -u github.com/kardianos/govendor
   - govendor sync
 script:
   - go test ./...
