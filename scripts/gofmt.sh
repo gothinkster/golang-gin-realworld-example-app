@@ -1,6 +1,6 @@
 #!/bin/bash
 
-gofmt=$(go fmt ./...)
+gofmt=$(govendor fmt +l)
 echo $gofmt
 
 if [ ${#gofmt} != 0 ]; then
