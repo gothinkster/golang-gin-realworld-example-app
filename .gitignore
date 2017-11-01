@@ -21,5 +21,6 @@ vendor/*
 
 tmp/*
 gorm.db
+coverage.txt
 
 bak.*
