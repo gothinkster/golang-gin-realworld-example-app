@@ -16,7 +16,7 @@ install:
   - govendor sync
 script:
   - go test -v ./...
-  - go test -race -coverprofile=coverage.txt -covermode=atomic
+  - bash ./scripts/coverage.sh
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
