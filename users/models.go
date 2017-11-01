@@ -56,10 +56,8 @@ func (u *UserModel) setPassword(password string) error {
 		return errors.New("password should not be empty!")
 	}
 	bytePassword := []byte(password)
-	passwordHash, err := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
+	// Make sure the second param `bcrypt generator cost` between [4, 32)
+	passwordHash, _ := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
 	u.PasswordHash = string(passwordHash)
 	return nil
 }

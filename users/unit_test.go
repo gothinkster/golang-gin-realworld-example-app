@@ -228,6 +228,17 @@ var unauthRequestTests = []struct {
 	},
 	{
 		func(req *http.Request) {
+			req.Header.Set("Authorization", fmt.Sprintf("Tokee %v", common.GenToken(1)))
+		},
+		"/user/",
+		"GET",
+		``,
+		http.StatusUnauthorized,
+		``,
+		"wrong token should return 401",
+	},
+	{
+		func(req *http.Request) {
 			HeaderTokenMock(req, 1)
 		},
 		"/user/",
@@ -303,9 +314,62 @@ var unauthRequestTests = []struct {
 		"request should return correct other's profile",
 	},
 
+	//---------------------   Testing for user following errors   ---------------------
+	{
+		func(req *http.Request) {
+			common.TestDBFree(test_db)
+			test_db = common.TestDBInit()
+
+			test_db.AutoMigrate(&UserModel{})
+			userModelMocker(3)
+			HeaderTokenMock(req, 2)
+		},
+		"/profiles/user1/follow",
+		"POST",
+		``,
+		http.StatusUnprocessableEntity,
+		`{"errors":{"database":"no such table: follow_models"}}`,
+		"test database error",
+	},
+	{
+		func(req *http.Request) {
+			HeaderTokenMock(req, 2)
+		},
+		"/profiles/user1/follow",
+		"DELETE",
+		``,
+		http.StatusUnprocessableEntity,
+		`{"errors":{"database":"no such table: follow_models"}}`,
+		"test database error",
+	},
+	{
+		func(req *http.Request) {
+			resetDBWithMock()
+			HeaderTokenMock(req, 2)
+		},
+		"/profiles/user666/follow",
+		"POST",
+		``,
+		http.StatusNotFound,
+		`{"errors":{"profile":"Invalid username"}}`,
+		"following wrong user name should return errors",
+	},
+	{
+		func(req *http.Request) {
+			HeaderTokenMock(req, 2)
+		},
+		"/profiles/user666/follow",
+		"DELETE",
+		``,
+		http.StatusNotFound,
+		`{"errors":{"profile":"Invalid username"}}`,
+		"cancel following wrong user name should return errors",
+	},
+
 	//---------------------   Testing for user following   ---------------------
 	{
 		func(req *http.Request) {
+			resetDBWithMock()
 			HeaderTokenMock(req, 2)
 		},
 		"/profiles/user1/follow",

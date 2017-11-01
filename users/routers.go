@@ -33,6 +33,7 @@ func ProfileRetrieve(c *gin.Context) {
 	profileSerializer := ProfileSerializer{c, userModel}
 	c.JSON(http.StatusOK, gin.H{"profile": profileSerializer.Response()})
 }
+
 func ProfileFollow(c *gin.Context) {
 	username := c.Param("username")
 	userModel, err := FindOneUser(&UserModel{Username: username})
