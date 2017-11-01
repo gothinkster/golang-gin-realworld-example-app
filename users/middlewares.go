@@ -18,7 +18,7 @@ func stripBearerPrefixFromTokenString(tok string) (string, error) {
 	return tok, nil
 }
 
-// Extract bearer token from Authorization header
+// Extract  token from Authorization header
 // Uses PostExtractionFilter to strip "TOKEN " prefix from header
 var AuthorizationHeaderExtractor = &request.PostExtractionFilter{
 	request.HeaderExtractor{"Authorization"},
@@ -32,6 +32,7 @@ var MyAuth2Extractor = &request.MultiExtractor{
 	request.ArgumentExtractor{"access_token"},
 }
 
+// A helper to write user_id and user_model to the context
 func UpdateContextUserModel(c *gin.Context, my_user_id uint) {
 	var myUserModel UserModel
 	if my_user_id != 0 {
@@ -42,6 +43,8 @@ func UpdateContextUserModel(c *gin.Context, my_user_id uint) {
 	c.Set("my_user_model", myUserModel)
 }
 
+// You can custom middlewares yourself as the doc: https://github.com/gin-gonic/gin#custom-middleware
+//  r.Use(AuthMiddleware(true))
 func AuthMiddleware(auto401 bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		UpdateContextUserModel(c, 0)

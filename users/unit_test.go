@@ -214,7 +214,7 @@ var unauthRequestTests = []struct {
 		"password too short should return error info",
 	},
 
-	//---------------------   Testing for user profile CRUD   ---------------------
+	//---------------------   Testing for self info get & auth module  ---------------------
 	{
 		func(req *http.Request) {
 			resetDBWithMock()
@@ -248,8 +248,36 @@ var unauthRequestTests = []struct {
 		`{"user":{"username":"user1","email":"user1@linkedin.com","bio":"bio1","image":"http://image/1.jpg","token":"([a-zA-Z0-9-_.]{115})"}}`,
 		"request should return current user with token",
 	},
+
+	//---------------------   Testing for users' profile get   ---------------------
 	{
 		func(req *http.Request) {
+			resetDBWithMock()
+			HeaderTokenMock(req, 1)
+		},
+		"/profiles/user1",
+		"GET",
+		``,
+		http.StatusOK,
+		`{"profile":{"username":"user1","bio":"bio1","image":"http://image/1.jpg","following":false}}`,
+		"request should return self profile",
+	},
+	{
+		func(req *http.Request) {
+			HeaderTokenMock(req, 2)
+		},
+		"/profiles/user1",
+		"GET",
+		``,
+		http.StatusOK,
+		`{"profile":{"username":"user1","bio":"bio1","image":"http://image/1.jpg","following":false}}`,
+		"request should return correct other's profile",
+	},
+
+	//---------------------   Testing for users' profile update   ---------------------
+	{
+		func(req *http.Request) {
+			resetDBWithMock()
 			HeaderTokenMock(req, 1)
 		},
 		"/profiles/user123",
@@ -292,29 +320,40 @@ var unauthRequestTests = []struct {
 	},
 	{
 		func(req *http.Request) {
-			resetDBWithMock()
-			HeaderTokenMock(req, 1)
+			HeaderTokenMock(req, 2)
 		},
-		"/profiles/user1",
-		"GET",
-		``,
-		http.StatusOK,
-		`{"profile":{"username":"user1","bio":"bio1","image":"http://image/1.jpg","following":false}}`,
-		"request should return self profile",
+		"/user/",
+		"PUT",
+		`{"user":{"password": "pas"}}`,
+		http.StatusUnprocessableEntity,
+		`{"errors":{"Password":"{min: 8}"}}`,
+		"current user profile should not be changed with error user info",
+	},
+
+	//---------------------   Testing for db errors   ---------------------
+	{
+		func(req *http.Request) {
+			resetDBWithMock()
+			HeaderTokenMock(req, 4)
+		},
+		"/user/",
+		"PUT",
+		`{"password": "password321"}}`,
+		http.StatusUnprocessableEntity,
+		`{"errors":{"Email":"{key: email}","Username":"{key: alphanum}"}}`,
+		"test database pk error for user update",
 	},
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 2)
+			HeaderTokenMock(req, 0)
 		},
-		"/profiles/user1",
-		"GET",
-		``,
-		http.StatusOK,
-		`{"profile":{"username":"user1","bio":"bio1","image":"http://image/1.jpg","following":false}}`,
-		"request should return correct other's profile",
+		"/user/",
+		"PUT",
+		`{"user":{"username": "wangzitian0","email": "wzt@gg.cn","password": "jakejxke"}}`,
+		http.StatusUnprocessableEntity,
+		`{"errors":{"database":"UNIQUE constraint failed: user_models.email"}}`,
+		"cheat validator and test database connecting error for user update",
 	},
-
-	//---------------------   Testing for user following errors   ---------------------
 	{
 		func(req *http.Request) {
 			common.TestDBFree(test_db)
@@ -329,7 +368,7 @@ var unauthRequestTests = []struct {
 		``,
 		http.StatusUnprocessableEntity,
 		`{"errors":{"database":"no such table: follow_models"}}`,
-		"test database error",
+		"test database error for following",
 	},
 	{
 		func(req *http.Request) {
@@ -340,7 +379,7 @@ var unauthRequestTests = []struct {
 		``,
 		http.StatusUnprocessableEntity,
 		`{"errors":{"database":"no such table: follow_models"}}`,
-		"test database error",
+		"test database error for canceling following",
 	},
 	{
 		func(req *http.Request) {

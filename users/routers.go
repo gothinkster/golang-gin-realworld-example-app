@@ -120,6 +120,7 @@ func UserUpdate(c *gin.Context) {
 		return
 	}
 
+	userModelValidator.userModel.ID = myUserModel.ID
 	if err := myUserModel.Update(userModelValidator.userModel); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, common.NewError("database", err))
 		return

@@ -95,12 +95,6 @@ func (model *UserModel) Update(data interface{}) error {
 	return err
 }
 
-func DeleteFollowModel(condition interface{}) error {
-	db := common.GetDB()
-	err := db.Where(condition).Delete(FollowModel{}).Error
-	return err
-}
-
 // You could add a following relationship as userModel1 following userModel2
 // 	err = userModel1.following(userModel2)
 func (u UserModel) following(v UserModel) error {
