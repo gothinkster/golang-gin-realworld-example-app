@@ -1,7 +1,10 @@
 #!/bin/bash
 
-if [ -n "$(go fmt ./...)" ]; then
-    echo "There is unformatted code, you should use `go fmt ./...` to format it."
+gofmt=$(go fmt ./...)
+echo $gofmt
+
+if [ ${#gofmt} != 0 ]; then
+    echo "There is unformatted code, you should use `go fmt ./\.\.\.` to format it."
     exit 1
 else
     echo "Codes are formatted."
