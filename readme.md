@@ -65,7 +65,7 @@ go get -u github.com/pilu/fresh
 
 ## Todo
 - More elegance config
-- Test coverage
+- Test coverage (commons 92%, users 100%, article 0%)
 - ProtoBuf support
 - Code structure optimize
-- Continuous integration
+- Continuous integration (done)
