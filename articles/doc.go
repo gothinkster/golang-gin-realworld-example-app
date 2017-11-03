@@ -1,5 +1,5 @@
 /*
-The user module containing the user CRU operation.
+The article module containing the article CRUD operation and relationship CRUD.
 
 model.go: definition of orm based data model
 
@@ -9,4 +9,4 @@ serializers.go: definition the schema of return data
 
 validators.go: definition the validator of form data
 */
-package users
+package articles

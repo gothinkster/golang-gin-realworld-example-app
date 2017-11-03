@@ -1,3 +1,4 @@
+// Common tools and helper functions
 package common
 
 import (
