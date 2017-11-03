@@ -11,6 +11,7 @@ type ProfileSerializer struct {
 	UserModel
 }
 
+// Declare your response schema here
 type ProfileResponse struct {
 	ID        uint    `json:"-"`
 	Username  string  `json:"username"`
@@ -19,6 +20,7 @@ type ProfileResponse struct {
 	Following bool    `json:"following"`
 }
 
+// Put your response logic including wrap the userModel here.
 func (self *ProfileSerializer) Response() ProfileResponse {
 	myUserModel := self.C.MustGet("my_user_model").(UserModel)
 	profile := ProfileResponse{

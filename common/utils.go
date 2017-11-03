@@ -14,6 +14,7 @@ import (
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
+// A helper function to generate random string
 func RandString(n int) string {
 	b := make([]rune, n)
 	for i := range b {
@@ -22,6 +23,7 @@ func RandString(n int) string {
 	return string(b)
 }
 
+// Keep this two config private, it should not expose to open source
 const NBSecretPassword = "A String Very Very Very Strong!!@##$!@#$"
 const NBRandomPassword = "A String Very Very Very Niubilty!!@##$!@#4"
 
@@ -34,10 +36,7 @@ func GenToken(id uint) string {
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	}
 	// Sign and get the complete encoded token as a string
-	token, err := jwt_token.SignedString([]byte(NBSecretPassword))
-	if err != nil {
-		panic("jwt generator broken")
-	}
+	token, _ := jwt_token.SignedString([]byte(NBSecretPassword))
 	return token
 }
 
