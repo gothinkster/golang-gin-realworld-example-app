@@ -57,6 +57,7 @@ go get -u github.com/pilu/fresh
 ## Start
 ```
 ➜  govendor sync
+➜  govendor add +external
 ➜  fresh
 ```
 
