@@ -49,9 +49,10 @@ https://github.com/kardianos/govendor
 
 https://github.com/pilu/fresh
 ```
-cd 
+cd
 go get -u github.com/kardianos/govendor
 go get -u github.com/pilu/fresh
+go get -u golang.org/x/crypto/...
 ```
 
 ## Start
