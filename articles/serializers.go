@@ -1,9 +1,9 @@
 package articles
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/gosimple/slug"
-	"github.com/wangzitian0/golang-gin-starter-kit/users"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gothinkster/golang-gin-realworld-example-app/users"
 )
 
 type TagSerializer struct {
