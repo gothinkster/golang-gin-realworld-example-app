@@ -9,10 +9,10 @@
 			"revisionTime": "2017-04-10T16:13:40Z"
 		},
 		{
-			"checksumSHA1": "mrz/kicZiUaHxkyfvC/DyQcr8Do=",
+			"checksumSHA1": "CSPbwbyzqA6sfORicn4HFtIhF/c=",
 			"path": "github.com/davecgh/go-spew/spew",
-			"revision": "adab96458c51a58dc1783b3335dcce5461522e75",
-			"revisionTime": "2017-07-11T18:34:51Z"
+			"revision": "8991bc29aa16c548c550c7ff78260e27b9ab7c73",
+			"revisionTime": "2018-02-21T22:46:20Z"
 		},
 		{
 			"checksumSHA1": "GXOurDGgsLmJs0wounpdWZZRSGw=",
@@ -39,22 +39,36 @@
 			"revisionTime": "2017-05-29T06:23:10Z"
 		},
 		{
-			"checksumSHA1": "g1ULoqYPmgLWhNTimHlM5usWZ1s=",
+			"checksumSHA1": "90S9sFqcIo/uuwQzz1t/wYs7GEs=",
 			"path": "github.com/gin-gonic/gin",
-			"revision": "93b3a0d7ec95c33dc327397ab1756c36853328ee",
-			"revisionTime": "2017-07-16T03:42:08Z"
+			"revision": "b869fe1415e4b9eb52f247441830d502aece2d4d",
+			"revisionTime": "2018-08-14T08:58:52Z",
+			"version": "v1.3",
+			"versionExact": "v1.3.0"
 		},
 		{
-			"checksumSHA1": "A09l4+1MIuaXhh3Nn6aoOm+rr3Q=",
+			"checksumSHA1": "BjShmaQTKI8+411rCb7LFqJkLA0=",
 			"path": "github.com/gin-gonic/gin/binding",
-			"revision": "aa6d2d29f8ac39c365aa5b72fdec01029b0d5264",
-			"revisionTime": "2017-07-11T15:28:08Z"
+			"revision": "b869fe1415e4b9eb52f247441830d502aece2d4d",
+			"revisionTime": "2018-08-14T08:58:52Z",
+			"version": "v1.3",
+			"versionExact": "v1.3.0"
 		},
 		{
-			"checksumSHA1": "8UlyJTegyrXbE8UErbf2lH7X4AM=",
+			"checksumSHA1": "woO1qIxIeQ1bcbPSiMfAKk3r4xg=",
+			"path": "github.com/gin-gonic/gin/json",
+			"revision": "b869fe1415e4b9eb52f247441830d502aece2d4d",
+			"revisionTime": "2018-08-14T08:58:52Z",
+			"version": "v1.3",
+			"versionExact": "v1.3.0"
+		},
+		{
+			"checksumSHA1": "f1n8P2YAi3o+X0//dkoDJ822zW0=",
 			"path": "github.com/gin-gonic/gin/render",
-			"revision": "aa6d2d29f8ac39c365aa5b72fdec01029b0d5264",
-			"revisionTime": "2017-07-11T15:28:08Z"
+			"revision": "b869fe1415e4b9eb52f247441830d502aece2d4d",
+			"revisionTime": "2018-08-14T08:58:52Z",
+			"version": "v1.3",
+			"versionExact": "v1.3.0"
 		},
 		{
 			"checksumSHA1": "pI0js2qnSKXOzUq9AoA5CJDJNRw=",
@@ -117,10 +131,10 @@
 			"revisionTime": "2017-07-11T23:04:30Z"
 		},
 		{
-			"checksumSHA1": "U6lX43KDDlNOn+Z0Yyww+ZzHfFo=",
+			"checksumSHA1": "w5RcOnfv5YDr3j2bd1YydkPiZx4=",
 			"path": "github.com/mattn/go-isatty",
-			"revision": "fc9e8d8ef48496124e79ae0df75490096eccf6fe",
-			"revisionTime": "2017-03-22T23:44:13Z"
+			"revision": "6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c",
+			"revisionTime": "2017-11-07T05:05:31Z"
 		},
 		{
 			"checksumSHA1": "CmknXrMVBRJrx4LsIA9jEOmsLQQ=",
@@ -141,28 +155,34 @@
 			"revisionTime": "2015-09-07T02:38:54Z"
 		},
 		{
-			"checksumSHA1": "K0crHygPTP42i1nLKWphSlvOQJw=",
+			"checksumSHA1": "BBudH/js1dNI/nEfTwsAYUo9l2M=",
 			"path": "github.com/stretchr/objx",
-			"revision": "1a9d0bb9f541897e62256577b352fdbc1fb4fd94",
-			"revisionTime": "2015-09-28T12:21:52Z"
+			"revision": "ef50b0de28773081167c97fc27cf29a0bf8b8c71",
+			"revisionTime": "2018-08-25T06:49:32Z"
 		},
 		{
-			"checksumSHA1": "J+ppEq6nYMKxhB9+c+MD1x9UwSc=",
+			"checksumSHA1": "nj123dGxKPIF17B6y3VEK2pihRk=",
+			"path": "github.com/stretchr/testify",
+			"revision": "f35b8ab0b5a2cef36673838d662e249dd9c94686",
+			"revisionTime": "2018-05-06T18:05:49Z"
+		},
+		{
+			"checksumSHA1": "c6pbpF7eowwO59phRTpF8cQ80Z0=",
 			"path": "github.com/stretchr/testify/assert",
-			"revision": "05e8a0eda380579888eb53c394909df027f06991",
-			"revisionTime": "2017-07-13T16:51:06Z"
+			"revision": "f35b8ab0b5a2cef36673838d662e249dd9c94686",
+			"revisionTime": "2018-05-06T18:05:49Z"
 		},
 		{
 			"checksumSHA1": "fg3TzS9/QK3wZbzei3Z6O8XPLHg=",
 			"path": "github.com/stretchr/testify/http",
-			"revision": "05e8a0eda380579888eb53c394909df027f06991",
-			"revisionTime": "2017-07-13T16:51:06Z"
+			"revision": "f35b8ab0b5a2cef36673838d662e249dd9c94686",
+			"revisionTime": "2018-05-06T18:05:49Z"
 		},
 		{
-			"checksumSHA1": "o+jsS/rxceTym4M3reSPfrPxaio=",
+			"checksumSHA1": "WmBSFdqpdYRIkp0I408JIZ3LDMY=",
 			"path": "github.com/stretchr/testify/mock",
-			"revision": "05e8a0eda380579888eb53c394909df027f06991",
-			"revisionTime": "2017-07-13T16:51:06Z"
+			"revision": "f35b8ab0b5a2cef36673838d662e249dd9c94686",
+			"revisionTime": "2018-05-06T18:05:49Z"
 		},
 		{
 			"checksumSHA1": "9Zw986fuQM/hCoVd8vmHoSM+8sU=",
@@ -183,12 +203,6 @@
 			"revisionTime": "2017-07-10T15:57:01Z"
 		},
 		{
-			"checksumSHA1": "lqXx4OhLBZFV5p4+I0OvpNabF4A=",
-			"path": "gopkg.in/gin-gonic/gin.v1",
-			"revision": "d459835d2b077e44f7c9b453505ee29881d5d12d",
-			"revisionTime": "2017-07-02T09:28:26Z"
-		},
-		{
 			"checksumSHA1": "39V1idWER42Lmcmg2Uy40wMzOlo=",
 			"path": "gopkg.in/go-playground/validator.v8",
 			"revision": "5f57d2222ad794d0dffb07e664ea05e2ee07d60c",
@@ -207,5 +221,5 @@
 			"revisionTime": "2017-07-12T05:45:46Z"
 		}
 	],
-	"rootPath": "github.com/wangzitian0/golang-gin-starter-kit"
+	"rootPath": "github.com/gothinkster/golang-gin-realworld-example-app"
 }

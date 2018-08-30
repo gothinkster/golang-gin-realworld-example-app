@@ -2,8 +2,9 @@ package users
 
 import (
 	"errors"
+
+	"github.com/gothinkster/golang-gin-realworld-example-app/common"
 	"github.com/jinzhu/gorm"
-	"github.com/wangzitian0/golang-gin-starter-kit/common"
 	"golang.org/x/crypto/bcrypt"
 )
 
