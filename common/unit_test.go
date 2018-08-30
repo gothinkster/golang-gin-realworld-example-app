@@ -3,12 +3,13 @@ package common
 import (
 	"bytes"
 	"errors"
-	"github.com/stretchr/testify/assert"
-	"gopkg.in/gin-gonic/gin.v1"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConnectingDatabase(t *testing.T) {
