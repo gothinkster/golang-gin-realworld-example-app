@@ -1,9 +1,9 @@
 package users
 
 import (
-	"gopkg.in/gin-gonic/gin.v1"
+	"golang-gin-realworld-example-app/common"
 
-	"github.com/wangzitian0/golang-gin-starter-kit/common"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 type ProfileSerializer struct {
