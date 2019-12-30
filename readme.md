@@ -1,6 +1,5 @@
 # ![RealWorld Example App](logo.png)
 
-
 [![Build Status](https://travis-ci.org/wangzitian0/golang-gin-starter-kit.svg?branch=master)](https://travis-ci.org/wangzitian0/golang-gin-starter-kit)
 [![codecov](https://codecov.io/gh/wangzitian0/golang-gin-starter-kit/branch/master/graph/badge.svg)](https://codecov.io/gh/wangzitian0/golang-gin-starter-kit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/wangzitian0/golang-gin-starter-kit/blob/master/LICENSE)
@@ -8,11 +7,10 @@
 
 > ### Golang/Gin codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld) spec and API.
 
-
 This codebase was created to demonstrate a fully fledged fullstack application built with **Golang/Gin** including CRUD operations, authentication, routing, pagination, and more.
 
-
 # How it works
+
 ```
 .
 ├── gorm.db
@@ -31,9 +29,13 @@ This codebase was created to demonstrate a fully fledged fullstack application b
 # Getting started
 
 ## Install the Golang
+
 https://golang.org/doc/install
+
 ## Environment Config
-make sure your ~/.*shrc have those varible:
+
+make sure your ~/.\*shrc have those varible:
+
 ```
 ➜  echo $GOPATH
 /Users/zitwang/test/
@@ -42,32 +44,34 @@ make sure your ~/.*shrc have those varible:
 ➜  echo $PATH
 ...:/usr/local/go/bin:/Users/zitwang/test//bin:/usr/local/go//bin
 ```
-## Install Govendor & Fresh
-I used Govendor manage the package, and Fresh can help build without reload
 
-https://github.com/kardianos/govendor
+## Install Fresh
+
+I used Fresh can help build without reload
 
 https://github.com/pilu/fresh
+
 ```
 cd
-go get -u github.com/kardianos/govendor
 go get -u github.com/pilu/fresh
 go get -u golang.org/x/crypto/...
 ```
 
 ## Start
+
 ```
-➜  govendor sync
-➜  govendor add +external
+➜  go run hello.go
 ➜  fresh
 ```
 
 ## Testing
+
 ```
 ➜  go test -v ./... -cover
 ```
 
 ## Todo
+
 - More elegance config
 - Test coverage (common & users 100%, article 0%)
 - ProtoBuf support
