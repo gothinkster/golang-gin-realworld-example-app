@@ -6,11 +6,12 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 	"gopkg.in/go-playground/validator.v8"
 
 	"github.com/gin-gonic/gin/binding"
-	"gopkg.in/gin-gonic/gin.v1"
+	// "gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")

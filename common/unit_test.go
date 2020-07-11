@@ -3,12 +3,14 @@ package common
 import (
 	"bytes"
 	"errors"
-	"github.com/stretchr/testify/assert"
-	"gopkg.in/gin-gonic/gin.v1"
+
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 func TestConnectingDatabase(t *testing.T) {
@@ -83,8 +85,8 @@ func TestNewValidatorError(t *testing.T) {
 	asserts := assert.New(t)
 
 	type Login struct {
-		Username string `form:"username" json:"username" binding:"exists,alphanum,min=4,max=255"`
-		Password string `form:"password" json:"password" binding:"exists,min=8,max=255"`
+		Username string `form:"username" json:"username" binding:"required,alphanum,min=4,max=255"`
+		Password string `form:"password" json:"password" binding:"required,min=8,max=255"`
 	}
 
 	var requestTests = []struct {

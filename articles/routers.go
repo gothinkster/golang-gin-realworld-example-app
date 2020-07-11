@@ -2,11 +2,17 @@ package articles
 
 import (
 	"errors"
-	"github.com/wangzitian0/golang-gin-starter-kit/common"
-	"github.com/wangzitian0/golang-gin-starter-kit/users"
-	"gopkg.in/gin-gonic/gin.v1"
+	"fmt"
+	"golang-gin-realworld-example-app/common"
+	"golang-gin-realworld-example-app/users"
 	"net/http"
 	"strconv"
+
+	// "github.com/wangzitian0/golang-gin-starter-kit/common"
+	// "github.com/wangzitian0/golang-gin-starter-kit/users"
+
+	// "gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 func ArticlesRegister(router *gin.RouterGroup) {
@@ -17,8 +23,74 @@ func ArticlesRegister(router *gin.RouterGroup) {
 	router.DELETE("/:slug/favorite", ArticleUnfavorite)
 	router.POST("/:slug/comments", ArticleCommentCreate)
 	router.DELETE("/:slug/comments/:id", ArticleCommentDelete)
+	router.POST("/:slug/comments/:id/vote", ArticleCommentVotePost)
+	router.DELETE("/:slug/comments/:id/vote", ArticleCommentVoteDelete)
+	router.PUT("/:slug/comments/:id/vote", ArticleCommentVoteUpdate)
 }
 
+func ArticleCommentVotePost(c *gin.Context) {
+	commentVoteValidator := CommentVoteValidator{}
+	if err := commentVoteValidator.Bind(c); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+	userId := c.MustGet("my_user_id").(uint)
+	vote, err := CreateCommentVote(commentVoteValidator, userId)
+	if err != nil {
+		c.JSON(http.StatusConflict, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	serial := VoteSerializer{vote: vote}
+	c.JSON(http.StatusCreated, gin.H{
+		"vote": serial.Response(),
+	})
+}
+func ArticleCommentVoteUpdate(c *gin.Context) {
+	commentVoteValidator := CommentVoteValidator{}
+	if err := commentVoteValidator.Bind(c); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+	userId := c.MustGet("my_user_id").(uint)
+	vote, err := UpdateCommentVote(commentVoteValidator, userId)
+	if err != nil {
+		c.JSON(http.StatusConflict, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	serial := VoteSerializer{vote: vote}
+	c.JSON(http.StatusOK, gin.H{
+		"vote": serial.Response(),
+	})
+}
+func ArticleCommentVoteDelete(c *gin.Context) {
+	commentVoteValidator := CommentVoteValidator{}
+	if err := commentVoteValidator.BindCommentId(c); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+	userId := c.MustGet("my_user_id").(uint)
+	vote, err := GetCommentVote(commentVoteValidator, userId)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	if err := DeleteCommentVote(vote); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": "comment got deleted",
+	})
+
+}
 func ArticlesAnonymousRegister(router *gin.RouterGroup) {
 	router.GET("/", ArticleList)
 	router.GET("/:slug", ArticleRetrieve)
@@ -35,6 +107,7 @@ func ArticleCreate(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
 		return
 	}
+	fmt.Printf("ArticleModelValidator: %+v\n", articleModelValidator)
 	//fmt.Println(articleModelValidator.articleModel.Author.UserModel)
 
 	if err := SaveOne(&articleModelValidator.articleModel); err != nil {

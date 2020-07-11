@@ -1,9 +1,12 @@
 package articles
 
 import (
+	"golang-gin-realworld-example-app/users"
+
 	"github.com/gosimple/slug"
-	"github.com/wangzitian0/golang-gin-starter-kit/users"
-	"gopkg.in/gin-gonic/gin.v1"
+	// "github.com/wangzitian0/golang-gin-starter-kit/users"
+	// "gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 type TagSerializer struct {
@@ -133,4 +136,26 @@ func (s *CommentsSerializer) Response() []CommentResponse {
 		response = append(response, serializer.Response())
 	}
 	return response
+}
+
+type VoteSerializer struct {
+	vote CommentModelVote
+}
+
+type VoteResponse struct {
+	UserID    uint `json:"user_id"`
+	CommentID uint `json:"comment_id"`
+	UpVote    bool `json:"up_vote"`
+	DownVote  bool `json:"down_vote"`
+}
+
+func (self VoteSerializer) Response() VoteResponse {
+	voteModel := self.vote
+	voteResponse := VoteResponse{
+		UserID:    voteModel.UserID,
+		CommentID: voteModel.CommentID,
+		UpVote:    voteModel.UpVote,
+		DownVote:  voteModel.DownVote,
+	}
+	return voteResponse
 }

@@ -1,11 +1,17 @@
 package articles
 
 import (
+	"fmt"
 	_ "fmt"
-	"github.com/jinzhu/gorm"
-	"github.com/wangzitian0/golang-gin-starter-kit/common"
-	"github.com/wangzitian0/golang-gin-starter-kit/users"
+	"golang-gin-realworld-example-app/common"
+	"golang-gin-realworld-example-app/users"
 	"strconv"
+	"time"
+
+	"github.com/jinzhu/gorm"
+	// "github.com/wangzitian0/golang-gin-starter-kit/users"
+	// "github.com/wangzitian0/golang-gin-starter-kit/common"
+	// "github.com/wangzitian0/golang-gin-starter-kit/users"
 )
 
 type ArticleModel struct {
@@ -44,11 +50,22 @@ type TagModel struct {
 
 type CommentModel struct {
 	gorm.Model
-	Article   ArticleModel
-	ArticleID uint
-	Author    ArticleUserModel
-	AuthorID  uint
-	Body      string `gorm:"size:2048"`
+	Article     ArticleModel
+	ArticleID   uint
+	Author      ArticleUserModel
+	CommentVote []CommentModelVote `gorm:"foreignkey:CommentID"`
+	AuthorID    uint
+	Body        string `gorm:"size:2048"`
+}
+
+type CommentModelVote struct {
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+	UserID    uint `gorm:"primary_key;auto_increment:false"`
+	CommentID uint `gorm:"primary_key;auto_increment:false"`
+	UpVote    bool
+	DownVote  bool
 }
 
 func GetArticleUserModel(userModel users.UserModel) ArticleUserModel {
@@ -266,4 +283,42 @@ func DeleteCommentModel(condition interface{}) error {
 	db := common.GetDB()
 	err := db.Where(condition).Delete(CommentModel{}).Error
 	return err
+}
+
+func GetCommentVote(vote CommentVoteValidator, userId uint) (CommentModelVote, error) {
+	db := common.GetDB()
+	var commentVote CommentModelVote
+	err := db.Where("user_id = ? AND comment_id = ?", userId, vote.CommentID).First(&commentVote).Error
+	return commentVote, err
+}
+
+func CreateCommentVote(vote CommentVoteValidator, userId uint) (CommentModelVote, error) {
+	db := common.GetDB()
+	commentVote := CommentModelVote{
+		CommentID: vote.CommentID,
+		UserID:    userId,
+		UpVote:    vote.UpVote,
+		DownVote:  vote.DownVote,
+	}
+	err := db.Create(&commentVote).Error
+	fmt.Printf("\n\nthis is in CreateCommentVote: %+v\n\n", commentVote)
+	return commentVote, err
+}
+
+func DeleteCommentVote(commentVote CommentModelVote) error {
+	db := common.GetDB()
+	err := db.Unscoped().Delete(&commentVote).Error
+	return err
+}
+
+func UpdateCommentVote(vote CommentVoteValidator, userId uint) (CommentModelVote, error) {
+	db := common.GetDB()
+	voteModel, err := GetCommentVote(vote, userId)
+	if err != nil {
+		return voteModel, err
+	}
+	voteModel.UpVote = vote.UpVote
+	voteModel.DownVote = vote.DownVote
+	err2 := db.Save(&voteModel).Error
+	return voteModel, err2
 }

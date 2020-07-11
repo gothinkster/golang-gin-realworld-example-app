@@ -1,18 +1,22 @@
 package users
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"bytes"
 	"fmt"
-	"github.com/jinzhu/gorm"
-	"github.com/wangzitian0/golang-gin-starter-kit/common"
-	"gopkg.in/gin-gonic/gin.v1"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	_ "regexp"
+
+	"github.com/jinzhu/gorm"
+	"github.com/wangzitian0/golang-gin-starter-kit/common"
+
+	// "gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 var image_url = "https://golang.org/doc/gopher/frontpage.png"

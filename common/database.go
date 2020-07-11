@@ -2,9 +2,12 @@ package common
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+
 	"os"
+
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 type Database struct {
@@ -15,13 +18,15 @@ var DB *gorm.DB
 
 // Opening a database and save the reference to `Database` struct.
 func Init() *gorm.DB {
-	db, err := gorm.Open("sqlite3", "./../gorm.db")
+	// db, err := gorm.Open("sqlite3", "./../gorm.db")
+	db, err := gorm.Open("postgres", "host=localhost port=5432 user=postgres dbname=realworld password=postgres")
 	if err != nil {
 		fmt.Println("db err: ", err)
 	}
 	db.DB().SetMaxIdleConns(10)
-	//db.LogMode(true)
+	db.LogMode(true)
 	DB = db
+	fmt.Printf("db is: %+v\n", *DB)
 	return DB
 }
 

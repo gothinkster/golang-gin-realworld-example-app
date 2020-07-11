@@ -1,12 +1,17 @@
 package users
 
 import (
+	"golang-gin-realworld-example-app/common"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
-	"github.com/wangzitian0/golang-gin-starter-kit/common"
-	"gopkg.in/gin-gonic/gin.v1"
+
+	// "github.com/wangzitian0/golang-gin-starter-kit/common"
 	"net/http"
 	"strings"
+
+	// "gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 // Strips 'TOKEN ' prefix from token string

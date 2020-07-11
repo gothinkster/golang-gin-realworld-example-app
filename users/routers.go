@@ -2,9 +2,12 @@ package users
 
 import (
 	"errors"
-	"github.com/wangzitian0/golang-gin-starter-kit/common"
-	"gopkg.in/gin-gonic/gin.v1"
+	"golang-gin-realworld-example-app/common"
 	"net/http"
+
+	// "github.com/wangzitian0/golang-gin-starter-kit/common"
+	// "gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 func UsersRegister(router *gin.RouterGroup) {
