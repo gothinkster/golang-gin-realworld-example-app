@@ -2,16 +2,12 @@ package articles
 
 import (
 	"fmt"
-	_ "fmt"
 	"golang-gin-realworld-example-app/common"
 	"golang-gin-realworld-example-app/users"
 	"strconv"
 	"time"
 
 	"github.com/jinzhu/gorm"
-	// "github.com/wangzitian0/golang-gin-starter-kit/users"
-	// "github.com/wangzitian0/golang-gin-starter-kit/common"
-	// "github.com/wangzitian0/golang-gin-starter-kit/users"
 )
 
 type ArticleModel struct {
@@ -288,7 +284,11 @@ func DeleteCommentModel(condition interface{}) error {
 func GetCommentVote(vote CommentVoteValidator, userId uint) (CommentModelVote, error) {
 	db := common.GetDB()
 	var commentVote CommentModelVote
-	err := db.Where("user_id = ? AND comment_id = ?", userId, vote.CommentID).First(&commentVote).Error
+	voteQuery := CommentModelVote{
+		UserID:    userId,
+		CommentID: vote.CommentID,
+	}
+	err := db.Where(&voteQuery).First(&commentVote).Error
 	return commentVote, err
 }
 

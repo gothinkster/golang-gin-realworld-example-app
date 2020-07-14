@@ -10,7 +10,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/gin-gonic/gin.v1"
+	// "gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 func TestConnectingDatabase(t *testing.T) {
@@ -21,7 +22,7 @@ func TestConnectingDatabase(t *testing.T) {
 	asserts.NoError(err, "Db should exist")
 	asserts.NoError(db.DB().Ping(), "Db should be able to ping")
 
-	// Test get a connecting from connection pools
+	// Test get a connection from connection pools
 	connection := GetDB()
 	asserts.NoError(connection.DB().Ping(), "Db should be able to ping")
 	db.Close()

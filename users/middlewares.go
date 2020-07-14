@@ -6,11 +6,9 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
 
-	// "github.com/wangzitian0/golang-gin-starter-kit/common"
 	"net/http"
 	"strings"
 
-	// "gopkg.in/gin-gonic/gin.v1"
 	"github.com/gin-gonic/gin"
 )
 
@@ -65,7 +63,6 @@ func AuthMiddleware(auto401 bool) gin.HandlerFunc {
 		}
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			my_user_id := uint(claims["id"].(float64))
-			//fmt.Println(my_user_id,claims["id"])
 			UpdateContextUserModel(c, my_user_id)
 		}
 	}

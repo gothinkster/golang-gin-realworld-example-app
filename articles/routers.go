@@ -8,10 +8,6 @@ import (
 	"net/http"
 	"strconv"
 
-	// "github.com/wangzitian0/golang-gin-starter-kit/common"
-	// "github.com/wangzitian0/golang-gin-starter-kit/users"
-
-	// "gopkg.in/gin-gonic/gin.v1"
 	"github.com/gin-gonic/gin"
 )
 

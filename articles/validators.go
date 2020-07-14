@@ -5,11 +5,8 @@ import (
 	"golang-gin-realworld-example-app/common"
 	"golang-gin-realworld-example-app/users"
 
-	"github.com/gosimple/slug"
-	// "github.com/wangzitian0/golang-gin-starter-kit/common"
-	// "github.com/wangzitian0/golang-gin-starter-kit/users"
-	// "gopkg.in/gin-gonic/gin.v1"
 	"github.com/gin-gonic/gin"
+	"github.com/gosimple/slug"
 )
 
 type ArticleModelValidator struct {
@@ -109,8 +106,6 @@ func (s *CommentVoteValidator) Bind(c *gin.Context) error {
 }
 
 func (s *CommentVoteValidator) BindCommentId(c *gin.Context) error {
-	// commentID := c.Param("id")(int)
-	// s.CommentID = commentID
 	if err := c.ShouldBindUri(s); err != nil {
 		return err
 	}
