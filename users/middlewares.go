@@ -1,12 +1,15 @@
 package users
 
 import (
+	"golang-gin-realworld-example-app/common"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
-	"github.com/wangzitian0/golang-gin-starter-kit/common"
-	"gopkg.in/gin-gonic/gin.v1"
+
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Strips 'TOKEN ' prefix from token string
@@ -60,7 +63,6 @@ func AuthMiddleware(auto401 bool) gin.HandlerFunc {
 		}
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			my_user_id := uint(claims["id"].(float64))
-			//fmt.Println(my_user_id,claims["id"])
 			UpdateContextUserModel(c, my_user_id)
 		}
 	}

@@ -2,28 +2,35 @@ package main
 
 import (
 	"fmt"
-
-	"gopkg.in/gin-gonic/gin.v1"
+	"golang-gin-realworld-example-app/articles"
+	"golang-gin-realworld-example-app/common"
+	"golang-gin-realworld-example-app/users"
 
 	"github.com/jinzhu/gorm"
-	"github.com/wangzitian0/golang-gin-starter-kit/articles"
-	"github.com/wangzitian0/golang-gin-starter-kit/common"
-	"github.com/wangzitian0/golang-gin-starter-kit/users"
+
+	// gin "gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
+	// "github.com/wangzitian0/golang-gin-starter-kit/articles"
+	// "github.com/wangzitian0/golang-gin-starter-kit/common"
+	// "github.com/wangzitian0/golang-gin-starter-kit/users"
 )
 
-func Migrate(db *gorm.DB) {
+func migrate(db *gorm.DB) {
+	// db.DropTable(&articles.ArticleModel{}, &articles.TagModel{}, &articles.FavoriteModel{}, &articles.ArticleUserModel{}, &articles.CommentModel{}, &users.UserModel{}, &users.FollowModel{})
 	users.AutoMigrate()
 	db.AutoMigrate(&articles.ArticleModel{})
 	db.AutoMigrate(&articles.TagModel{})
 	db.AutoMigrate(&articles.FavoriteModel{})
 	db.AutoMigrate(&articles.ArticleUserModel{})
 	db.AutoMigrate(&articles.CommentModel{})
+	db.AutoMigrate(&articles.CommentModelVote{})
+
 }
 
 func main() {
 
 	db := common.Init()
-	Migrate(db)
+	migrate(db)
 	defer db.Close()
 
 	r := gin.Default()

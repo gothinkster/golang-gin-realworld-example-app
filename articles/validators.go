@@ -1,20 +1,36 @@
 package articles
 
 import (
+	"fmt"
+	"golang-gin-realworld-example-app/common"
+	"golang-gin-realworld-example-app/users"
+
+	"github.com/gin-gonic/gin"
 	"github.com/gosimple/slug"
-	"github.com/wangzitian0/golang-gin-starter-kit/common"
-	"github.com/wangzitian0/golang-gin-starter-kit/users"
-	"gopkg.in/gin-gonic/gin.v1"
 )
 
 type ArticleModelValidator struct {
 	Article struct {
-		Title       string   `form:"title" json:"title" binding:"exists,min=4"`
+		Title       string   `form:"title" json:"title" binding:"required"`
 		Description string   `form:"description" json:"description" binding:"max=2048"`
 		Body        string   `form:"body" json:"body" binding:"max=2048"`
 		Tags        []string `form:"tagList" json:"tagList"`
 	} `json:"article"`
 	articleModel ArticleModel `json:"-"`
+}
+
+type CommentVoteValidator struct {
+	CommentID uint `uri:"id" binding:"required"`
+	UpVote    bool `json:"up_vote"`
+	DownVote  bool `json:"down_vote"`
+}
+
+type CommentVoteError struct {
+	err string
+}
+
+func (e CommentVoteError) Error() string {
+	return e.err
 }
 
 func NewArticleModelValidator() ArticleModelValidator {
@@ -68,5 +84,31 @@ func (s *CommentModelValidator) Bind(c *gin.Context) error {
 	}
 	s.commentModel.Body = s.Comment.Body
 	s.commentModel.Author = GetArticleUserModel(myUserModel)
+	return nil
+}
+
+func (s *CommentVoteValidator) Bind(c *gin.Context) error {
+	// commentID := c.Param("id")(int)
+	// s.CommentID = commentID
+	if err := c.ShouldBindUri(s); err != nil {
+		return err
+	}
+	err := common.Bind(c, s)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("\n\n In Bind: %+v \n\n", s)
+	if (s.DownVote && s.UpVote) || !(s.UpVote || s.DownVote) {
+		err := CommentVoteError{err: "Either one of the UpVote or DownVote can be true not both."}
+		return err
+	}
+	return nil
+}
+
+func (s *CommentVoteValidator) BindCommentId(c *gin.Context) error {
+	if err := c.ShouldBindUri(s); err != nil {
+		return err
+	}
+	fmt.Printf("\n\n In Bind: %+v \n\n", s)
 	return nil
 }

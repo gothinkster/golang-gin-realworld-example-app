@@ -2,8 +2,9 @@ package users
 
 import (
 	"errors"
+	"golang-gin-realworld-example-app/common"
+
 	"github.com/jinzhu/gorm"
-	"github.com/wangzitian0/golang-gin-starter-kit/common"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,6 +20,7 @@ type UserModel struct {
 	Bio          string  `gorm:"column:bio;size:1024"`
 	Image        *string `gorm:"column:image"`
 	PasswordHash string  `gorm:"column:password;not null"`
+	// Vote         []articles.CommentModelVote `gorm:"foreignkey:UserID"`
 }
 
 // A hack way to save ManyToMany relationship,
