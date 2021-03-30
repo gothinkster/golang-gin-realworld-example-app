@@ -2,8 +2,8 @@ package users
 
 import (
 	"errors"
-	"github.com/wangzitian0/golang-gin-starter-kit/common"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gothinkster/golang-gin-realworld-example-app/common"
+	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
