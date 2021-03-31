@@ -16,8 +16,8 @@
 .DS_Store
 Thumbs.db
 
-vendorx/*
-!vendorx/vendor.json
+vendor/*
+!vendor/vendor.json
 
 tmp/*
 gorm.db

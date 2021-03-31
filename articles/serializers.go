@@ -3,7 +3,7 @@ package articles
 import (
 	"github.com/gosimple/slug"
 	"github.com/gothinkster/golang-gin-realworld-example-app/users"
-	"github.com/gin-gonic/gin"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 type TagSerializer struct {
