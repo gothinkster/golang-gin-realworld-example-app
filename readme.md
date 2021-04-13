@@ -47,6 +47,7 @@ Set-up the standard Go environment variables according to latest guidance (see h
 From the project root, run:
 ```
 go build ./...
+go test ./...
 go mod tidy
 ```
 
