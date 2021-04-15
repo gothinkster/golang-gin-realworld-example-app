@@ -10,7 +10,7 @@ import (
 	"gopkg.in/go-playground/validator.v8"
 
 	"github.com/gin-gonic/gin/binding"
-	"github.com/gin-gonic/gin"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
