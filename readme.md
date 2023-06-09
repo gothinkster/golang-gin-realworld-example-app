@@ -1,6 +1,5 @@
 # ![RealWorld Example App](logo.png)
 
-
 [![Build Status](https://travis-ci.org/wangzitian0/golang-gin-realworld-example-app.svg?branch=master)](https://travis-ci.org/wangzitian0/golang-gin-realworld-example-app)
 [![codecov](https://codecov.io/gh/wangzitian0/golang-gin-realworld-example-app/branch/master/graph/badge.svg)](https://codecov.io/gh/wangzitian0/golang-gin-realworld-example-app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/gothinkster/golang-gin-realworld-example-app/blob/master/LICENSE)
@@ -8,11 +7,10 @@
 
 > ### Golang/Gin codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld) spec and API.
 
-
 This codebase was created to demonstrate a fully fledged fullstack application built with **Golang/Gin** including CRUD operations, authentication, routing, pagination, and more.
 
-
 # Directory structure
+
 ```
 .
 ├── gorm.db
@@ -42,9 +40,10 @@ https://golang.org/doc/install
 
 Set-up the standard Go environment variables according to latest guidance (see https://golang.org/doc/install#install).
 
-
 ## Install Dependencies
+
 From the project root, run:
+
 ```
 go build ./...
 go test ./...
@@ -52,21 +51,45 @@ go mod tidy
 ```
 
 ## Testing
+
 From the project root, run:
+
 ```
 go test ./...
 ```
+
 or
+
 ```
 go test ./... -cover
 ```
+
 or
+
 ```
 go test -v ./... -cover
 ```
+
 depending on whether you want to see test coverage and how verbose the output you want.
 
+## Troubleshooting
+
+- Undefined validation function 'exists' on field 'Username'
+  If you get this error you should try downgrade to gin-gonic/gin@v1.4.0 using:
+
+```
+go get github.com/gin-gonic/gin@v1.4.0
+```
+
+Then build and execute the project like:
+
+```
+go build
+./golang-gin-realworld-example-app
+```
+
 ## Todo
+
 - More elegance config
 - Test coverage (common & users 100%, article 0%)
 - ProtoBuf support
