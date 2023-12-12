@@ -1,11 +1,15 @@
-name: Example workflow using Snyk
-on: push
+name: "snyk code manual test"
+on: [push, pull_request]
+
 jobs:
-  security:
+  build:
+    name: sarif testing action
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
     steps:
-      - uses: actions/checkout@master
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secret.f495f4b4-3ec6-4c9c-b312-38c6fbb07067 }}
+      - uses: actions/checkout@v3
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: test.json
