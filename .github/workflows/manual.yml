@@ -8,4 +8,4 @@ jobs:
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@master
         env:
-          SNYK_TOKEN: ${{ GithubAction.5c6791a1-6b78-4f41-8692-bf7aa5dfa46b }}
+          SNYK_TOKEN: ${{ secret.f495f4b4-3ec6-4c9c-b312-38c6fbb07067 }}
