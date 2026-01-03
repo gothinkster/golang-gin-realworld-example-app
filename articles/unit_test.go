@@ -218,7 +218,10 @@ func userModelMocker(n int) []users.UserModel {
 	for i := int(offset) + 1; i <= int(offset)+n; i++ {
 		image := fmt.Sprintf("http://image/%v.jpg", i)
 		// Generate password hash directly using bcrypt
-		passwordHash, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+		passwordHash, err := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+		if err != nil {
+			panic(fmt.Sprintf("failed to generate password hash: %v", err))
+		}
 		userModel := users.UserModel{
 			Username:     fmt.Sprintf("articleuser%v", i),
 			Email:        fmt.Sprintf("articleuser%v@test.com", i),
@@ -428,7 +431,7 @@ var articleRequestTests = []struct {
 		``,
 		"delete comment should succeed",
 	},
-	// Test feed (requires auth)
+	// Test feed (requires auth) - returns empty array since no follow relationship set up
 	{
 		func(req *http.Request) {
 			HeaderTokenMock(req, 2)
@@ -437,8 +440,8 @@ var articleRequestTests = []struct {
 		"GET",
 		``,
 		http.StatusOK,
-		`"articles":\[`,
-		"feed should return articles from followed users",
+		`"articles":\[\]`,
+		"feed should return empty array when user follows no one",
 	},
 	// Test delete article
 	{

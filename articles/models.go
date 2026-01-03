@@ -155,13 +155,13 @@ func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleMod
 				return models, count, err
 			}
 			count = int(tx.Model(&tagModel).Association("ArticleModels").Count())
-			// Fetch articles with preloaded associations in single query
+			// Fetch articles with preloaded associations in single query, ordered by updated_at desc
 			if len(tempModels) > 0 {
 				var ids []uint
 				for _, m := range tempModels {
 					ids = append(ids, m.ID)
 				}
-				tx.Preload("Author.UserModel").Preload("Tags").Where("id IN ?", ids).Find(&models)
+				tx.Preload("Author.UserModel").Preload("Tags").Where("id IN ?", ids).Order("updated_at desc").Find(&models)
 			}
 		}
 	} else if author != "" {
@@ -177,13 +177,13 @@ func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleMod
 				tx.Rollback()
 				return models, count, err
 			}
-			// Fetch articles with preloaded associations in single query
+			// Fetch articles with preloaded associations in single query, ordered by updated_at desc
 			if len(tempModels) > 0 {
 				var ids []uint
 				for _, m := range tempModels {
 					ids = append(ids, m.ID)
 				}
-				tx.Preload("Author.UserModel").Preload("Tags").Where("id IN ?", ids).Find(&models)
+				tx.Preload("Author.UserModel").Preload("Tags").Where("id IN ?", ids).Order("updated_at desc").Find(&models)
 			}
 		}
 	} else if favorited != "" {
