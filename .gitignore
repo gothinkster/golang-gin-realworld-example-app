@@ -22,7 +22,9 @@ vendor/*
 tmp/*
 gorm.db
 gorm_test.db
+*.db
 coverage.txt
 profile.out
+results.sarif
 
 bak.*
