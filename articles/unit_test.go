@@ -214,35 +214,35 @@ func TestFindManyArticle(t *testing.T) {
 	asserts.NotNil(articles, "Articles should not be nil")
 
 	// Test with invalid limit/offset
-	articles, count, err = FindManyArticle("", "", "invalid", "invalid", "")
+	_, _, err = FindManyArticle("", "", "invalid", "invalid", "")
 	asserts.NoError(err, "FindManyArticle with invalid params should succeed")
 
 	// Test filter by tag
-	articles, count, err = FindManyArticle("findmanytag", "", "10", "0", "")
+	_, count, err = FindManyArticle("findmanytag", "", "10", "0", "")
 	asserts.NoError(err, "FindManyArticle by tag should succeed")
 	asserts.GreaterOrEqual(count, 1, "Count should be at least 1 for tag filter")
 
 	// Test filter by non-existent tag
-	articles, count, err = FindManyArticle("nonexistenttag", "", "10", "0", "")
+	_, count, err = FindManyArticle("nonexistenttag", "", "10", "0", "")
 	asserts.NoError(err, "FindManyArticle by non-existent tag should succeed")
 	asserts.Equal(0, count, "Count should be 0 for non-existent tag")
 
 	// Test filter by author
-	articles, count, err = FindManyArticle("", userModel.Username, "10", "0", "")
+	_, count, err = FindManyArticle("", userModel.Username, "10", "0", "")
 	asserts.NoError(err, "FindManyArticle by author should succeed")
 	asserts.GreaterOrEqual(count, 1, "Count should be at least 1 for author filter")
 
 	// Test filter by non-existent author
-	articles, count, err = FindManyArticle("", "nonexistentauthor", "10", "0", "")
+	_, _, err = FindManyArticle("", "nonexistentauthor", "10", "0", "")
 	asserts.NoError(err, "FindManyArticle by non-existent author should succeed")
 
 	// Test filter by favorited
-	articles, count, err = FindManyArticle("", "", "10", "0", userModel.Username)
+	_, count, err = FindManyArticle("", "", "10", "0", userModel.Username)
 	asserts.NoError(err, "FindManyArticle by favorited should succeed")
 	asserts.GreaterOrEqual(count, 1, "Count should be at least 1 for favorited filter")
 
 	// Test filter by non-existent favorited user
-	articles, count, err = FindManyArticle("", "", "10", "0", "nonexistentuser")
+	_, _, err = FindManyArticle("", "", "10", "0", "nonexistentuser")
 	asserts.NoError(err, "FindManyArticle by non-existent favorited should succeed")
 }
 

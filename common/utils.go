@@ -14,14 +14,6 @@ import (
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
-func init() {
-	// Seed the random number generator for Go versions prior to 1.20
-	// In Go 1.20+, math/rand is automatically seeded, but this ensures
-	// compatibility with older versions. These random functions are only
-	// used for generating unique test data, not for security purposes.
-	rand.Seed(time.Now().UnixNano())
-}
-
 // A helper function to generate random string
 func RandString(n int) string {
 	b := make([]rune, n)
