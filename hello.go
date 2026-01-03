@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/gin-gonic/gin"
 
@@ -26,7 +26,7 @@ func main() {
 	Migrate(db)
 	sqlDB, err := db.DB()
 	if err != nil {
-		fmt.Println("failed to get sql.DB:", err)
+		log.Println("failed to get sql.DB:", err)
 	} else {
 		defer sqlDB.Close()
 	}
@@ -52,27 +52,6 @@ func main() {
 			"message": "pong",
 		})
 	})
-
-	// test 1 to 1
-	tx1 := db.Begin()
-	userA := users.UserModel{
-		Username: "AAAAAAAAAAAAAAAA",
-		Email:    "aaaa@g.cn",
-		Bio:      "hehddeda",
-		Image:    nil,
-	}
-	tx1.Save(&userA)
-	tx1.Commit()
-	fmt.Println(userA)
-
-	//db.Save(&ArticleUserModel{
-	//    UserModelID:userA.ID,
-	//})
-	//var userAA ArticleUserModel
-	//db.Where(&ArticleUserModel{
-	//    UserModelID:userA.ID,
-	//}).First(&userAA)
-	//fmt.Println(userAA)
 
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
