@@ -134,7 +134,10 @@ func ArticleFavorite(c *gin.Context) {
 		return
 	}
 	myUserModel := c.MustGet("my_user_model").(users.UserModel)
-	err = articleModel.favoriteBy(GetArticleUserModel(myUserModel))
+	if err = articleModel.favoriteBy(GetArticleUserModel(myUserModel)); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, common.NewError("database", err))
+		return
+	}
 	serializer := ArticleSerializer{c, articleModel}
 	c.JSON(http.StatusOK, gin.H{"article": serializer.Response()})
 }
@@ -147,7 +150,10 @@ func ArticleUnfavorite(c *gin.Context) {
 		return
 	}
 	myUserModel := c.MustGet("my_user_model").(users.UserModel)
-	err = articleModel.unFavoriteBy(GetArticleUserModel(myUserModel))
+	if err = articleModel.unFavoriteBy(GetArticleUserModel(myUserModel)); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, common.NewError("database", err))
+		return
+	}
 	serializer := ArticleSerializer{c, articleModel}
 	c.JSON(http.StatusOK, gin.H{"article": serializer.Response()})
 }

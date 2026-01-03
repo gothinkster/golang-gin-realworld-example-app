@@ -16,4 +16,4 @@ issues:
   
 run:
   timeout: 5m
-  go: '1.23'
+  go: '1.22'
