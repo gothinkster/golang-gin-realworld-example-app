@@ -12,6 +12,7 @@ import (
 	"github.com/gothinkster/golang-gin-realworld-example-app/common"
 	"github.com/gothinkster/golang-gin-realworld-example-app/users"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -216,13 +217,15 @@ func userModelMocker(n int) []users.UserModel {
 	var ret []users.UserModel
 	for i := int(offset) + 1; i <= int(offset)+n; i++ {
 		image := fmt.Sprintf("http://image/%v.jpg", i)
+		// Generate password hash directly using bcrypt
+		passwordHash, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
 		userModel := users.UserModel{
-			Username: fmt.Sprintf("articleuser%v", i),
-			Email:    fmt.Sprintf("articleuser%v@test.com", i),
-			Bio:      fmt.Sprintf("bio%v", i),
-			Image:    &image,
+			Username:     fmt.Sprintf("articleuser%v", i),
+			Email:        fmt.Sprintf("articleuser%v@test.com", i),
+			Bio:          fmt.Sprintf("bio%v", i),
+			Image:        &image,
+			PasswordHash: string(passwordHash),
 		}
-		userModel.SetPassword("password123")
 		test_db.Create(&userModel)
 		ret = append(ret, userModel)
 	}
