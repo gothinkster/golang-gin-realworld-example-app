@@ -39,10 +39,13 @@ func setupRouter() *gin.Engine {
 }
 
 func createTestUser() users.UserModel {
+	// Generate a proper password hash to satisfy NOT NULL constraint
+	passwordHash, _ := bcrypt.GenerateFromPassword([]byte("testpassword123"), bcrypt.DefaultCost)
 	userModel := users.UserModel{
-		Username: fmt.Sprintf("testuser%d", common.RandInt()),
-		Email:    fmt.Sprintf("test%d@example.com", common.RandInt()),
-		Bio:      "test bio",
+		Username:     fmt.Sprintf("testuser%d", common.RandInt()),
+		Email:        fmt.Sprintf("test%d@example.com", common.RandInt()),
+		Bio:          "test bio",
+		PasswordHash: string(passwordHash),
 	}
 	test_db.Create(&userModel)
 	return userModel
