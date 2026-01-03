@@ -110,7 +110,7 @@ func ArticleUpdate(c *gin.Context) {
 		c.JSON(http.StatusForbidden, common.NewError("article", errors.New("you are not the author")))
 		return
 	}
-	
+
 	articleModelValidator := NewArticleModelValidatorFillWith(articleModel)
 	if err := articleModelValidator.Bind(c); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
@@ -139,8 +139,11 @@ func ArticleDelete(c *gin.Context) {
 		}
 	}
 	// Delete regardless of existence (idempotent)
-	DeleteArticleModel(&ArticleModel{Slug: slug})
-	c.Status(http.StatusOK)
+	if err := DeleteArticleModel(&ArticleModel{Slug: slug}); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, common.NewError("database", err))
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"article": "delete success"})
 }
 
 func ArticleFavorite(c *gin.Context) {
@@ -215,8 +218,11 @@ func ArticleCommentDelete(c *gin.Context) {
 		}
 	}
 	// Delete regardless of existence (idempotent)
-	DeleteCommentModel([]uint{id})
-	c.Status(http.StatusOK)
+	if err := DeleteCommentModel([]uint{id}); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, common.NewError("database", err))
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"comment": "delete success"})
 }
 
 func ArticleCommentList(c *gin.Context) {

@@ -32,7 +32,7 @@ func (self *UserModelValidator) Bind(c *gin.Context) error {
 	self.userModel.Email = self.User.Email
 	self.userModel.Bio = self.User.Bio
 
-	if self.User.Password != common.NBRandomPassword {
+	if self.User.Password != common.RandomPassword {
 		self.userModel.setPassword(self.User.Password)
 	}
 	if self.User.Image != "" {
@@ -44,7 +44,6 @@ func (self *UserModelValidator) Bind(c *gin.Context) error {
 // You can put the default value of a Validator here
 func NewUserModelValidator() UserModelValidator {
 	userModelValidator := UserModelValidator{}
-	//userModelValidator.User.Email ="w@g.cn"
 	return userModelValidator
 }
 
@@ -53,7 +52,7 @@ func NewUserModelValidatorFillWith(userModel UserModel) UserModelValidator {
 	userModelValidator.User.Username = userModel.Username
 	userModelValidator.User.Email = userModel.Email
 	userModelValidator.User.Bio = userModel.Bio
-	userModelValidator.User.Password = common.NBRandomPassword
+	userModelValidator.User.Password = common.RandomPassword
 
 	if userModel.Image != nil {
 		userModelValidator.User.Image = *userModel.Image

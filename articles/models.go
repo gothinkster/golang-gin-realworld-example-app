@@ -363,9 +363,9 @@ func DeleteCommentModel(condition interface{}) error {
 	return err
 }
 
-func FindOneComment(condition *CommentModel) (*CommentModel, error) {
+func FindOneComment(condition interface{}) (CommentModel, error) {
 	db := common.GetDB()
 	var commentModel CommentModel
 	err := db.Where(condition).First(&commentModel).Error
-	return &commentModel, err
+	return commentModel, err
 }

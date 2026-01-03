@@ -29,8 +29,8 @@ func RandInt() int {
 }
 
 // Keep this two config private, it should not expose to open source
-const NBSecretPassword = "A String Very Very Very Strong!!@##$!@#$"
-const NBRandomPassword = "A String Very Very Very Niubilty!!@##$!@#4"
+const JWTSecret = "A String Very Very Very Strong!!@##$!@#$"
+const RandomPassword = "A String Very Very Very Random!!@##$!@#4"
 
 // A Util function to generate jwt_token which can be used in the request header
 func GenToken(id uint) string {
@@ -39,7 +39,7 @@ func GenToken(id uint) string {
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	})
 	// Sign and get the complete encoded token as a string
-	token, err := jwt_token.SignedString([]byte(NBSecretPassword))
+	token, err := jwt_token.SignedString([]byte(JWTSecret))
 	if err != nil {
 		fmt.Printf("failed to sign JWT token for id %d: %v\n", id, err)
 		return ""

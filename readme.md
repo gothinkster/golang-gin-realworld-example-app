@@ -11,7 +11,7 @@
 
 This codebase was created to demonstrate a fully fledged fullstack application built with **Golang/Gin** including CRUD operations, authentication, routing, pagination, and more.
 
-## Recent Updates (2026)
+## Recent Updates
 
 This project has been modernized with the following updates:
 - **Go 1.21+**: Updated from Go 1.15 to require Go 1.21 or higher
@@ -19,11 +19,28 @@ This project has been modernized with the following updates:
 - **JWT v5**: Updated from deprecated dgrijalva/jwt-go to golang-jwt/jwt/v5 (fixes CVE-2020-26160)
 - **Validator v10**: Updated validator tags and package to match gin v1.10.0
 - **Latest Dependencies**: All dependencies updated to their 2025 production-stable versions
-- **RealWorld API Spec Compliance (2026)**:
+- **RealWorld API Spec Compliance**:
   - `GET /profiles/:username` now supports optional authentication (anonymous access allowed)
   - `POST /users/login` returns 401 Unauthorized on failure (previously 403)
   - `GET /articles/feed` registered as dedicated authenticated route
   - `DELETE /articles/:slug` and `DELETE /articles/:slug/comments/:id` return empty response body
+
+## Test Coverage
+
+The project maintains high test coverage across all core packages:
+
+| Package | Coverage |
+|---------|----------|
+| `articles` | 93.4% |
+| `users` | 99.5% |
+| `common` | 85.7% |
+| **Total** | **90.0%** |
+
+To generate a coverage report locally, run:
+```bash
+go test -coverprofile=coverage.out ./...
+go tool cover -func=coverage.out
+```
 
 ## Dependencies (2025 Stable Versions)
 
@@ -125,7 +142,6 @@ depending on whether you want to see test coverage and how verbose the output yo
 
 ## Todo
 - More elegance config
-- Test coverage (common & users 100%, article 0%)
 - ProtoBuf support
 - Code structure optimize (I think some place can use interface)
 - Continuous integration (done)
