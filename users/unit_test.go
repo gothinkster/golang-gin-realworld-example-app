@@ -98,10 +98,6 @@ func resetDBWithMock() {
 	userModelMocker(3)
 }
 
-func HeaderTokenMock(req *http.Request, u uint) {
-	req.Header.Set("Authorization", fmt.Sprintf("Token %v", common.GenToken(u)))
-}
-
 // You could write the init logic like reset database code here
 var unauthRequestTests = []struct {
 	init           func(*http.Request)
@@ -238,7 +234,7 @@ var unauthRequestTests = []struct {
 	},
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/user/",
 		"GET",
@@ -263,7 +259,7 @@ var unauthRequestTests = []struct {
 	{
 		func(req *http.Request) {
 			resetDBWithMock()
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/profiles/user1",
 		"GET",
@@ -274,7 +270,7 @@ var unauthRequestTests = []struct {
 	},
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 2)
+			common.HeaderTokenMock(req, 2)
 		},
 		"/profiles/user1",
 		"GET",
@@ -288,7 +284,7 @@ var unauthRequestTests = []struct {
 	{
 		func(req *http.Request) {
 			resetDBWithMock()
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/profiles/user123",
 		"GET",
@@ -299,7 +295,7 @@ var unauthRequestTests = []struct {
 	},
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/user/",
 		"PUT",
@@ -310,7 +306,7 @@ var unauthRequestTests = []struct {
 	},
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/profiles/user123",
 		"GET",
@@ -330,7 +326,7 @@ var unauthRequestTests = []struct {
 	},
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 2)
+			common.HeaderTokenMock(req, 2)
 		},
 		"/user/",
 		"PUT",
@@ -344,7 +340,7 @@ var unauthRequestTests = []struct {
 	{
 		func(req *http.Request) {
 			resetDBWithMock()
-			HeaderTokenMock(req, 4)
+			common.HeaderTokenMock(req, 4)
 		},
 		"/user/",
 		"PUT",
@@ -355,7 +351,7 @@ var unauthRequestTests = []struct {
 	},
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 0)
+			common.HeaderTokenMock(req, 0)
 		},
 		"/user/",
 		"PUT",
@@ -371,7 +367,7 @@ var unauthRequestTests = []struct {
 
 			test_db.AutoMigrate(&UserModel{})
 			userModelMocker(3)
-			HeaderTokenMock(req, 2)
+			common.HeaderTokenMock(req, 2)
 		},
 		"/profiles/user1/follow",
 		"POST",
@@ -382,7 +378,7 @@ var unauthRequestTests = []struct {
 	},
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 2)
+			common.HeaderTokenMock(req, 2)
 		},
 		"/profiles/user1/follow",
 		"DELETE",
@@ -394,7 +390,7 @@ var unauthRequestTests = []struct {
 	{
 		func(req *http.Request) {
 			resetDBWithMock()
-			HeaderTokenMock(req, 2)
+			common.HeaderTokenMock(req, 2)
 		},
 		"/profiles/user666/follow",
 		"POST",
@@ -405,7 +401,7 @@ var unauthRequestTests = []struct {
 	},
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 2)
+			common.HeaderTokenMock(req, 2)
 		},
 		"/profiles/user666/follow",
 		"DELETE",
@@ -419,7 +415,7 @@ var unauthRequestTests = []struct {
 	{
 		func(req *http.Request) {
 			resetDBWithMock()
-			HeaderTokenMock(req, 2)
+			common.HeaderTokenMock(req, 2)
 		},
 		"/profiles/user1/follow",
 		"POST",
@@ -430,7 +426,7 @@ var unauthRequestTests = []struct {
 	},
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 2)
+			common.HeaderTokenMock(req, 2)
 		},
 		"/profiles/user1",
 		"GET",
@@ -441,7 +437,7 @@ var unauthRequestTests = []struct {
 	},
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 2)
+			common.HeaderTokenMock(req, 2)
 		},
 		"/profiles/user1/follow",
 		"DELETE",
@@ -452,7 +448,7 @@ var unauthRequestTests = []struct {
 	},
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 2)
+			common.HeaderTokenMock(req, 2)
 		},
 		"/profiles/user1",
 		"GET",

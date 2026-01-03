@@ -18,10 +18,6 @@ import (
 
 var test_db *gorm.DB
 
-func HeaderTokenMock(req *http.Request, u uint) {
-	req.Header.Set("Authorization", fmt.Sprintf("Token %v", common.GenToken(u)))
-}
-
 func setupRouter() *gin.Engine {
 	r := gin.New()
 	r.RedirectTrailingSlash = false
@@ -49,6 +45,22 @@ func createTestUser() users.UserModel {
 	}
 	test_db.Create(&userModel)
 	return userModel
+}
+
+// createArticleWithUser creates a test article with an author user
+func createArticleWithUser(title, slug string) (ArticleModel, users.UserModel) {
+	user := createTestUser()
+	articleUserModel := GetArticleUserModel(user)
+	article := ArticleModel{
+		Slug:        slug,
+		Title:       title,
+		Description: "Test Description",
+		Body:        "Test Body",
+		Author:      articleUserModel,
+		AuthorID:    articleUserModel.ID,
+	}
+	SaveOne(&article)
+	return article, user
 }
 
 func TestArticleModel(t *testing.T) {
@@ -367,7 +379,7 @@ var articleRequestTests = []struct {
 	// Test create article
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/api/articles/",
 		"POST",
@@ -419,7 +431,7 @@ var articleRequestTests = []struct {
 	// Test update article
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/api/articles/test-article",
 		"PUT",
@@ -431,7 +443,7 @@ var articleRequestTests = []struct {
 	// Test favorite article
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/api/articles/updated-title/favorite",
 		"POST",
@@ -463,7 +475,7 @@ var articleRequestTests = []struct {
 	// Test unfavorite article
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/api/articles/updated-title/favorite",
 		"DELETE",
@@ -485,7 +497,7 @@ var articleRequestTests = []struct {
 	// Test create comment
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/api/articles/updated-title/comments",
 		"POST",
@@ -507,7 +519,7 @@ var articleRequestTests = []struct {
 	// Test delete comment
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/api/articles/updated-title/comments/1",
 		"DELETE",
@@ -519,7 +531,7 @@ var articleRequestTests = []struct {
 	// Test feed (requires auth) - returns empty array since no follow relationship set up
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 2)
+			common.HeaderTokenMock(req, 2)
 		},
 		"/api/articles/feed",
 		"GET",
@@ -531,7 +543,7 @@ var articleRequestTests = []struct {
 	// Test delete article
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/api/articles/updated-title",
 		"DELETE",
@@ -553,7 +565,7 @@ var articleRequestTests = []struct {
 	// Test favorite non-existent article
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/api/articles/non-existent/favorite",
 		"POST",
@@ -565,7 +577,7 @@ var articleRequestTests = []struct {
 	// Test unfavorite non-existent article
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/api/articles/non-existent/favorite",
 		"DELETE",
@@ -577,7 +589,7 @@ var articleRequestTests = []struct {
 	// Test create article with invalid data
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/api/articles/",
 		"POST",
@@ -589,7 +601,7 @@ var articleRequestTests = []struct {
 	// Test create comment on non-existent article
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/api/articles/non-existent/comments",
 		"POST",
@@ -611,7 +623,7 @@ var articleRequestTests = []struct {
 	// Test update non-existent article
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/api/articles/non-existent",
 		"PUT",
@@ -623,7 +635,7 @@ var articleRequestTests = []struct {
 	// Test delete non-existent article (GORM delete returns OK even if not found)
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/api/articles/non-existent",
 		"DELETE",
@@ -635,7 +647,7 @@ var articleRequestTests = []struct {
 	// Test delete comment with invalid id
 	{
 		func(req *http.Request) {
-			HeaderTokenMock(req, 1)
+			common.HeaderTokenMock(req, 1)
 		},
 		"/api/articles/test/comments/invalid",
 		"DELETE",
@@ -685,7 +697,7 @@ func TestCreateArticleRequiredFields(t *testing.T) {
 	// Test missing body field
 	req, _ := http.NewRequest("POST", "/api/articles", bytes.NewBufferString(`{"article":{"title":"Test Title","description":"Test Description"}}`))
 	req.Header.Set("Content-Type", "application/json")
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "Missing body should return 422")
@@ -694,7 +706,7 @@ func TestCreateArticleRequiredFields(t *testing.T) {
 	// Test missing description field
 	req, _ = http.NewRequest("POST", "/api/articles", bytes.NewBufferString(`{"article":{"title":"Test Title","body":"Test Body"}}`))
 	req.Header.Set("Content-Type", "application/json")
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "Missing description should return 422")
@@ -703,7 +715,7 @@ func TestCreateArticleRequiredFields(t *testing.T) {
 	// Test valid article creation
 	req, _ = http.NewRequest("POST", "/api/articles", bytes.NewBufferString(`{"article":{"title":"Test Title","description":"Test Description","body":"Test Body"}}`))
 	req.Header.Set("Content-Type", "application/json")
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusCreated, w.Code, "Valid article should return 201")
@@ -731,7 +743,7 @@ func TestCreateCommentRequiredFields(t *testing.T) {
 	// Test missing body field
 	req, _ := http.NewRequest("POST", fmt.Sprintf("/api/articles/%s/comments", article.Slug), bytes.NewBufferString(`{"comment":{}}`))
 	req.Header.Set("Content-Type", "application/json")
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "Missing body should return 422")
@@ -740,7 +752,7 @@ func TestCreateCommentRequiredFields(t *testing.T) {
 	// Test valid comment creation - should return 200 per OpenAPI spec
 	req, _ = http.NewRequest("POST", fmt.Sprintf("/api/articles/%s/comments", article.Slug), bytes.NewBufferString(`{"comment":{"body":"Test comment body"}}`))
 	req.Header.Set("Content-Type", "application/json")
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusOK, w.Code, "Valid comment should return 200")
@@ -811,19 +823,7 @@ func TestArticleListEndpoint(t *testing.T) {
 	asserts := assert.New(t)
 
 	r := setupRouter()
-	user := createTestUser()
-
-	// Create an article
-	articleUserModel := GetArticleUserModel(user)
-	article := ArticleModel{
-		Slug:        fmt.Sprintf("list-test-article-%d", common.RandInt()),
-		Title:       "List Test Article",
-		Description: "Test Description",
-		Body:        "Test Body",
-		Author:      articleUserModel,
-		AuthorID:    articleUserModel.ID,
-	}
-	SaveOne(&article)
+	_, _ = createArticleWithUser("List Test Article", fmt.Sprintf("list-test-article-%d", common.RandInt()))
 
 	// Test list articles
 	req, _ := http.NewRequest("GET", "/api/articles", nil)
@@ -839,23 +839,11 @@ func TestArticleRetrieveEndpoint(t *testing.T) {
 	asserts := assert.New(t)
 
 	r := setupRouter()
-	user := createTestUser()
-
-	// Create an article
-	articleUserModel := GetArticleUserModel(user)
 	slug := fmt.Sprintf("retrieve-test-article-%d", common.RandInt())
-	article := ArticleModel{
-		Slug:        slug,
-		Title:       "Retrieve Test Article",
-		Description: "Test Description",
-		Body:        "Test Body",
-		Author:      articleUserModel,
-		AuthorID:    articleUserModel.ID,
-	}
-	SaveOne(&article)
+	article, _ := createArticleWithUser("Retrieve Test Article", slug)
 
 	// Test retrieve article
-	req, _ := http.NewRequest("GET", fmt.Sprintf("/api/articles/%s", slug), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/api/articles/%s", article.Slug), nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -868,25 +856,13 @@ func TestArticleUpdateEndpoint(t *testing.T) {
 	asserts := assert.New(t)
 
 	r := setupRouter()
-	user := createTestUser()
-
-	// Create an article
-	articleUserModel := GetArticleUserModel(user)
 	slug := fmt.Sprintf("update-test-article-%d", common.RandInt())
-	article := ArticleModel{
-		Slug:        slug,
-		Title:       "Update Test Article",
-		Description: "Test Description",
-		Body:        "Test Body",
-		Author:      articleUserModel,
-		AuthorID:    articleUserModel.ID,
-	}
-	SaveOne(&article)
+	article, user := createArticleWithUser("Update Test Article", slug)
 
 	// Test update article
-	req, _ := http.NewRequest("PUT", fmt.Sprintf("/api/articles/%s", slug), bytes.NewBufferString(`{"article":{"body":"Updated Body"}}`))
+	req, _ := http.NewRequest("PUT", fmt.Sprintf("/api/articles/%s", article.Slug), bytes.NewBufferString(`{"article":{"body":"Updated Body"}}`))
 	req.Header.Set("Content-Type", "application/json")
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -915,7 +891,7 @@ func TestArticleDeleteEndpoint(t *testing.T) {
 
 	// Test delete article
 	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/api/articles/%s", slug), nil)
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -943,7 +919,7 @@ func TestArticleFavoriteEndpoint(t *testing.T) {
 
 	// Test favorite article
 	req, _ := http.NewRequest("POST", fmt.Sprintf("/api/articles/%s/favorite", slug), nil)
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -952,7 +928,7 @@ func TestArticleFavoriteEndpoint(t *testing.T) {
 
 	// Test unfavorite article
 	req, _ = http.NewRequest("DELETE", fmt.Sprintf("/api/articles/%s/favorite", slug), nil)
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -997,7 +973,7 @@ func TestArticleCommentsEndpoint(t *testing.T) {
 
 	// Test delete comment
 	req, _ = http.NewRequest("DELETE", fmt.Sprintf("/api/articles/%s/comments/%d", slug, comment.ID), nil)
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -1012,7 +988,7 @@ func TestArticleFeedEndpoint(t *testing.T) {
 
 	// Test feed endpoint
 	req, _ := http.NewRequest("GET", "/api/articles/feed", nil)
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -1022,7 +998,7 @@ func TestArticleFeedEndpoint(t *testing.T) {
 
 	// Test feed with limit and offset params
 	req, _ = http.NewRequest("GET", "/api/articles/feed?limit=5&offset=0", nil)
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusOK, w.Code, "Feed with params should return 200")
@@ -1054,7 +1030,7 @@ func TestArticleFeedWithFollowing(t *testing.T) {
 
 	// Test feed for User1 - should include User2's article
 	req, _ := http.NewRequest("GET", "/api/articles/feed", nil)
-	HeaderTokenMock(req, user1.ID)
+	common.HeaderTokenMock(req, user1.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -1077,28 +1053,28 @@ func TestArticleNotFoundErrors(t *testing.T) {
 	// Test update non-existent article
 	req, _ = http.NewRequest("PUT", "/api/articles/non-existent-slug", bytes.NewBufferString(`{"article":{"body":"test"}}`))
 	req.Header.Set("Content-Type", "application/json")
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusNotFound, w.Code, "Update non-existent article should return 404")
 
 	// Test delete non-existent article - returns 200 (GORM delete doesn't error on 0 rows)
 	req, _ = http.NewRequest("DELETE", "/api/articles/non-existent-slug", nil)
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusOK, w.Code, "Delete non-existent article returns 200")
 
 	// Test favorite non-existent article
 	req, _ = http.NewRequest("POST", "/api/articles/non-existent-slug/favorite", nil)
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusNotFound, w.Code, "Favorite non-existent article should return 404")
 
 	// Test unfavorite non-existent article
 	req, _ = http.NewRequest("DELETE", "/api/articles/non-existent-slug/favorite", nil)
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusNotFound, w.Code, "Unfavorite non-existent article should return 404")
@@ -1106,7 +1082,7 @@ func TestArticleNotFoundErrors(t *testing.T) {
 	// Test create comment on non-existent article
 	req, _ = http.NewRequest("POST", "/api/articles/non-existent-slug/comments", bytes.NewBufferString(`{"comment":{"body":"test"}}`))
 	req.Header.Set("Content-Type", "application/json")
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusNotFound, w.Code, "Comment on non-existent article should return 404")
@@ -1119,7 +1095,7 @@ func TestArticleNotFoundErrors(t *testing.T) {
 
 	// Test delete comment with invalid id
 	req, _ = http.NewRequest("DELETE", "/api/articles/some-slug/comments/invalid", nil)
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusNotFound, w.Code, "Delete comment with invalid id should return 404")
@@ -1164,7 +1140,7 @@ func TestArticleValidationErrors(t *testing.T) {
 	// Test create article with missing title
 	req, _ := http.NewRequest("POST", "/api/articles", bytes.NewBufferString(`{"article":{"description":"test","body":"test"}}`))
 	req.Header.Set("Content-Type", "application/json")
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "Missing title should return 422")
@@ -1172,7 +1148,7 @@ func TestArticleValidationErrors(t *testing.T) {
 	// Test create article with short title
 	req, _ = http.NewRequest("POST", "/api/articles", bytes.NewBufferString(`{"article":{"title":"abc","description":"test","body":"test"}}`))
 	req.Header.Set("Content-Type", "application/json")
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "Short title should return 422")
@@ -1212,7 +1188,7 @@ func TestArticleUpdateValidationErrors(t *testing.T) {
 	// Test update with title too short
 	req, _ := http.NewRequest("PUT", fmt.Sprintf("/api/articles/%s", slug), bytes.NewBufferString(`{"article":{"title":"ab"}}`))
 	req.Header.Set("Content-Type", "application/json")
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "Short title in update should return 422")
@@ -1227,7 +1203,7 @@ func TestArticleCreateWithTags(t *testing.T) {
 	// Test create article with tags
 	req, _ := http.NewRequest("POST", "/api/articles", bytes.NewBufferString(`{"article":{"title":"Test With Tags","description":"Test Description","body":"Test Body","tagList":["go","gin","test"]}}`))
 	req.Header.Set("Content-Type", "application/json")
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusCreated, w.Code, "Article with tags should return 201")
@@ -1263,7 +1239,7 @@ func TestCommentDeleteWithValidArticle(t *testing.T) {
 
 	// Test delete existing comment
 	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/api/articles/%s/comments/%d", slug, comment.ID), nil)
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusOK, w.Code, "Delete existing comment should return 200")
@@ -1409,7 +1385,7 @@ func TestArticleDeleteSuccess(t *testing.T) {
 
 	// Test delete existing article
 	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/api/articles/%s", slug), nil)
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -1463,7 +1439,7 @@ func TestArticleFeedErrorPath(t *testing.T) {
 
 	// Test with invalid limit/offset
 	req, _ := http.NewRequest("GET", "/api/articles/feed?limit=invalid&offset=invalid", nil)
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -1480,7 +1456,7 @@ func TestArticleCreateValidation(t *testing.T) {
 	// Test with empty fields
 	req, _ := http.NewRequest("POST", "/api/articles", bytes.NewBufferString(`{"article":{"title":"","description":"","body":""}}`))
 	req.Header.Set("Content-Type", "application/json")
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -1496,7 +1472,7 @@ func TestArticleUpdateNonExistent(t *testing.T) {
 	// Test update non-existent article
 	req, _ := http.NewRequest("PUT", "/api/articles/non-existent-article", bytes.NewBufferString(`{"article":{"title":"New Title"}}`))
 	req.Header.Set("Content-Type", "application/json")
-	HeaderTokenMock(req, user.ID)
+	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
