@@ -10,6 +10,7 @@ import (
 )
 
 func ArticlesRegister(router *gin.RouterGroup) {
+	router.GET("/feed", ArticleFeed)
 	router.POST("/", ArticleCreate)
 	router.PUT("/:slug", ArticleUpdate)
 	router.DELETE("/:slug", ArticleDelete)
@@ -81,10 +82,6 @@ func ArticleFeed(c *gin.Context) {
 
 func ArticleRetrieve(c *gin.Context) {
 	slug := c.Param("slug")
-	if slug == "feed" {
-		ArticleFeed(c)
-		return
-	}
 	articleModel, err := FindOneArticle(&ArticleModel{Slug: slug})
 	if err != nil {
 		c.JSON(http.StatusNotFound, common.NewError("articles", errors.New("Invalid slug")))
@@ -123,7 +120,7 @@ func ArticleDelete(c *gin.Context) {
 		c.JSON(http.StatusNotFound, common.NewError("articles", errors.New("Invalid slug")))
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"article": "Delete success"})
+	c.Status(http.StatusOK)
 }
 
 func ArticleFavorite(c *gin.Context) {
@@ -192,7 +189,7 @@ func ArticleCommentDelete(c *gin.Context) {
 		c.JSON(http.StatusNotFound, common.NewError("comment", errors.New("Invalid id")))
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"comment": "Delete success"})
+	c.Status(http.StatusOK)
 }
 
 func ArticleCommentList(c *gin.Context) {
