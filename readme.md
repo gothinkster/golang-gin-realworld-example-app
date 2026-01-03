@@ -17,7 +17,7 @@ This project has been modernized with the following updates:
 - **Go 1.21+**: Updated from Go 1.15 to require Go 1.21 or higher
 - **GORM v2**: Migrated from deprecated jinzhu/gorm v1 to gorm.io/gorm v2
 - **JWT v5**: Updated from deprecated dgrijalva/jwt-go to golang-jwt/jwt/v5 (fixes CVE-2020-26160)
-- **Validator v10**: Updated validator tags and package to match gin v1.10+
+- **Validator v10**: Updated validator tags and package to match gin v1.10.0
 - **Latest Dependencies**: All dependencies updated to their latest stable versions
 
 

@@ -34,7 +34,11 @@ func GenToken(id uint) string {
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	})
 	// Sign and get the complete encoded token as a string
-	token, _ := jwt_token.SignedString([]byte(NBSecretPassword))
+	token, err := jwt_token.SignedString([]byte(NBSecretPassword))
+	if err != nil {
+		fmt.Printf("failed to sign JWT token for id %d: %v\n", id, err)
+		return ""
+	}
 	return token
 }
 

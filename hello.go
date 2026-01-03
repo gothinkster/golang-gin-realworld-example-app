@@ -24,8 +24,12 @@ func main() {
 
 	db := common.Init()
 	Migrate(db)
-	sqlDB, _ := db.DB()
-	defer sqlDB.Close()
+	sqlDB, err := db.DB()
+	if err != nil {
+		fmt.Println("failed to get sql.DB:", err)
+	} else {
+		defer sqlDB.Close()
+	}
 
 	r := gin.Default()
 
