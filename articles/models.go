@@ -92,7 +92,7 @@ func BatchGetFavoriteCounts(articleIDs []uint) map[uint]uint {
 		return make(map[uint]uint)
 	}
 	db := common.GetDB()
-	
+
 	type result struct {
 		FavoriteID uint
 		Count      uint
@@ -103,7 +103,7 @@ func BatchGetFavoriteCounts(articleIDs []uint) map[uint]uint {
 		Where("favorite_id IN ?", articleIDs).
 		Group("favorite_id").
 		Find(&results)
-	
+
 	countMap := make(map[uint]uint)
 	for _, r := range results {
 		countMap[r.FavoriteID] = r.Count
@@ -117,10 +117,10 @@ func BatchGetFavoriteStatus(articleIDs []uint, userID uint) map[uint]bool {
 		return make(map[uint]bool)
 	}
 	db := common.GetDB()
-	
+
 	var favorites []FavoriteModel
 	db.Where("favorite_id IN ? AND favorite_by_id = ?", articleIDs, userID).Find(&favorites)
-	
+
 	statusMap := make(map[uint]bool)
 	for _, f := range favorites {
 		statusMap[f.FavoriteID] = true
@@ -275,22 +275,22 @@ func (self *ArticleUserModel) GetArticleFeed(limit, offset string) ([]ArticleMod
 
 	tx := db.Begin()
 	followings := self.UserModel.GetFollowings()
-	
+
 	// Batch get ArticleUserModel IDs to avoid N+1 query
 	if len(followings) > 0 {
 		var followingUserIDs []uint
 		for _, following := range followings {
 			followingUserIDs = append(followingUserIDs, following.ID)
 		}
-		
+
 		var articleUserModels []ArticleUserModel
 		tx.Where("user_model_id IN ?", followingUserIDs).Find(&articleUserModels)
-		
+
 		var authorIDs []uint
 		for _, aum := range articleUserModels {
 			authorIDs = append(authorIDs, aum.ID)
 		}
-		
+
 		if len(authorIDs) > 0 {
 			var count64 int64
 			tx.Model(&ArticleModel{}).Where("author_id IN ?", authorIDs).Count(&count64)
@@ -308,19 +308,19 @@ func (model *ArticleModel) setTags(tags []string) error {
 		model.Tags = []TagModel{}
 		return nil
 	}
-	
+
 	db := common.GetDB()
-	
+
 	// Batch fetch existing tags
 	var existingTags []TagModel
 	db.Where("tag IN ?", tags).Find(&existingTags)
-	
+
 	// Create a map for quick lookup
 	existingTagMap := make(map[string]TagModel)
 	for _, t := range existingTags {
 		existingTagMap[t.Tag] = t
 	}
-	
+
 	// Create missing tags and build final list
 	var tagList []TagModel
 	for _, tag := range tags {

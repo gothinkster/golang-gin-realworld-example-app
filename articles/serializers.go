@@ -119,19 +119,19 @@ func (s *ArticlesSerializer) Response() []ArticleResponse {
 	if len(s.Articles) == 0 {
 		return response
 	}
-	
+
 	// Batch fetch favorite counts and status
 	var articleIDs []uint
 	for _, article := range s.Articles {
 		articleIDs = append(articleIDs, article.ID)
 	}
-	
+
 	favoriteCounts := BatchGetFavoriteCounts(articleIDs)
-	
+
 	myUserModel := s.C.MustGet("my_user_model").(users.UserModel)
 	articleUserModel := GetArticleUserModel(myUserModel)
 	favoriteStatus := BatchGetFavoriteStatus(articleIDs, articleUserModel.ID)
-	
+
 	for _, article := range s.Articles {
 		serializer := ArticleSerializer{s.C, article}
 		favorited := favoriteStatus[article.ID]
