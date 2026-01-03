@@ -1,15 +1,16 @@
 package articles
 
 import (
+	"strconv"
+
 	"github.com/gothinkster/golang-gin-realworld-example-app/common"
 	"github.com/gothinkster/golang-gin-realworld-example-app/users"
-	"github.com/jinzhu/gorm"
-	"strconv"
+	"gorm.io/gorm"
 )
 
 type ArticleModel struct {
 	gorm.Model
-	Slug        string `gorm:"unique_index"`
+	Slug        string `gorm:"uniqueIndex"`
 	Title       string
 	Description string `gorm:"size:2048"`
 	Body        string `gorm:"size:2048"`
@@ -37,7 +38,7 @@ type FavoriteModel struct {
 
 type TagModel struct {
 	gorm.Model
-	Tag           string         `gorm:"unique_index"`
+	Tag           string         `gorm:"uniqueIndex"`
 	ArticleModels []ArticleModel `gorm:"many2many:article_tags;"`
 }
 
@@ -65,11 +66,11 @@ func GetArticleUserModel(userModel users.UserModel) ArticleUserModel {
 
 func (article ArticleModel) favoritesCount() uint {
 	db := common.GetDB()
-	var count uint
+	var count int64
 	db.Model(&FavoriteModel{}).Where(FavoriteModel{
 		FavoriteID: article.ID,
 	}).Count(&count)
-	return count
+	return uint(count)
 }
 
 func (article ArticleModel) isFavoriteBy(user ArticleUserModel) bool {
@@ -94,10 +95,7 @@ func (article ArticleModel) favoriteBy(user ArticleUserModel) error {
 
 func (article ArticleModel) unFavoriteBy(user ArticleUserModel) error {
 	db := common.GetDB()
-	err := db.Where(FavoriteModel{
-		FavoriteID:   article.ID,
-		FavoriteByID: user.ID,
-	}).Delete(FavoriteModel{}).Error
+	err := db.Where("favorite_id = ? AND favorite_by_id = ?", article.ID, user.ID).Delete(&FavoriteModel{}).Error
 	return err
 }
 
@@ -110,24 +108,13 @@ func SaveOne(data interface{}) error {
 func FindOneArticle(condition interface{}) (ArticleModel, error) {
 	db := common.GetDB()
 	var model ArticleModel
-	tx := db.Begin()
-	tx.Where(condition).First(&model)
-	tx.Model(&model).Related(&model.Author, "Author")
-	tx.Model(&model.Author).Related(&model.Author.UserModel)
-	tx.Model(&model).Related(&model.Tags, "Tags")
-	err := tx.Commit().Error
+	err := db.Preload("Author.UserModel").Preload("Tags").Where(condition).First(&model).Error
 	return model, err
 }
 
 func (self *ArticleModel) getComments() error {
 	db := common.GetDB()
-	tx := db.Begin()
-	tx.Model(self).Related(&self.Comments, "Comments")
-	for i := range self.Comments {
-		tx.Model(&self.Comments[i]).Related(&self.Comments[i].Author, "Author")
-		tx.Model(&self.Comments[i].Author).Related(&self.Comments[i].Author.UserModel)
-	}
-	err := tx.Commit().Error
+	err := db.Preload("Author.UserModel").Model(self).Association("Comments").Find(&self.Comments)
 	return err
 }
 
@@ -158,8 +145,8 @@ func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleMod
 		var tagModel TagModel
 		tx.Where(TagModel{Tag: tag}).First(&tagModel)
 		if tagModel.ID != 0 {
-			tx.Model(&tagModel).Offset(offset_int).Limit(limit_int).Related(&models, "ArticleModels")
-			count = tx.Model(&tagModel).Association("ArticleModels").Count()
+			tx.Model(&tagModel).Offset(offset_int).Limit(limit_int).Association("ArticleModels").Find(&models)
+			count = int(tx.Model(&tagModel).Association("ArticleModels").Count())
 		}
 	} else if author != "" {
 		var userModel users.UserModel
@@ -167,8 +154,8 @@ func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleMod
 		articleUserModel := GetArticleUserModel(userModel)
 
 		if articleUserModel.ID != 0 {
-			count = tx.Model(&articleUserModel).Association("ArticleModels").Count()
-			tx.Model(&articleUserModel).Offset(offset_int).Limit(limit_int).Related(&models, "ArticleModels")
+			count = int(tx.Model(&articleUserModel).Association("ArticleModels").Count())
+			tx.Model(&articleUserModel).Offset(offset_int).Limit(limit_int).Association("ArticleModels").Find(&models)
 		}
 	} else if favorited != "" {
 		var userModel users.UserModel
@@ -180,23 +167,20 @@ func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleMod
 				FavoriteByID: articleUserModel.ID,
 			}).Offset(offset_int).Limit(limit_int).Find(&favoriteModels)
 
-			count = tx.Model(&articleUserModel).Association("FavoriteModels").Count()
+			count = int(tx.Model(&articleUserModel).Association("FavoriteModels").Count())
 			for _, favorite := range favoriteModels {
 				var model ArticleModel
-				tx.Model(&favorite).Related(&model, "Favorite")
+				tx.Preload("Author.UserModel").Preload("Tags").First(&model, favorite.FavoriteID)
 				models = append(models, model)
 			}
 		}
 	} else {
-		db.Model(&models).Count(&count)
-		db.Offset(offset_int).Limit(limit_int).Find(&models)
+		var count64 int64
+		tx.Model(&ArticleModel{}).Count(&count64)
+		count = int(count64)
+		tx.Offset(offset_int).Limit(limit_int).Preload("Author.UserModel").Preload("Tags").Find(&models)
 	}
 
-	for i := range models {
-		tx.Model(&models[i]).Related(&models[i].Author, "Author")
-		tx.Model(&models[i].Author).Related(&models[i].Author.UserModel)
-		tx.Model(&models[i]).Related(&models[i].Tags, "Tags")
-	}
 	err := tx.Commit().Error
 	return models, count, err
 }
@@ -223,13 +207,8 @@ func (self *ArticleUserModel) GetArticleFeed(limit, offset string) ([]ArticleMod
 		articleUserModels = append(articleUserModels, articleUserModel.ID)
 	}
 
-	tx.Where("author_id in (?)", articleUserModels).Order("updated_at desc").Offset(offset_int).Limit(limit_int).Find(&models)
+	tx.Preload("Author.UserModel").Preload("Tags").Where("author_id in (?)", articleUserModels).Order("updated_at desc").Offset(offset_int).Limit(limit_int).Find(&models)
 
-	for i := range models {
-		tx.Model(&models[i]).Related(&models[i].Author, "Author")
-		tx.Model(&models[i].Author).Related(&models[i].Author.UserModel)
-		tx.Model(&models[i]).Related(&models[i].Tags, "Tags")
-	}
 	err := tx.Commit().Error
 	return models, count, err
 }
@@ -251,18 +230,18 @@ func (model *ArticleModel) setTags(tags []string) error {
 
 func (model *ArticleModel) Update(data interface{}) error {
 	db := common.GetDB()
-	err := db.Model(model).Update(data).Error
+	err := db.Model(model).Updates(data).Error
 	return err
 }
 
 func DeleteArticleModel(condition interface{}) error {
 	db := common.GetDB()
-	err := db.Where(condition).Delete(ArticleModel{}).Error
+	err := db.Where(condition).Delete(&ArticleModel{}).Error
 	return err
 }
 
 func DeleteCommentModel(condition interface{}) error {
 	db := common.GetDB()
-	err := db.Where(condition).Delete(CommentModel{}).Error
+	err := db.Where(condition).Delete(&CommentModel{}).Error
 	return err
 }

@@ -2,9 +2,10 @@ package users
 
 import (
 	"errors"
+
 	"github.com/gothinkster/golang-gin-realworld-example-app/common"
-	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 // Models should only be concerned with database schema, more strict checking should be put in validator.
@@ -13,9 +14,9 @@ import (
 //
 // HINT: If you want to split null and "", you should use *string instead of string.
 type UserModel struct {
-	ID           uint    `gorm:"primary_key"`
+	ID           uint    `gorm:"primaryKey"`
 	Username     string  `gorm:"column:username"`
-	Email        string  `gorm:"column:email;unique_index"`
+	Email        string  `gorm:"column:email;uniqueIndex"`
 	Bio          string  `gorm:"column:bio;size:1024"`
 	Image        *string `gorm:"column:image"`
 	PasswordHash string  `gorm:"column:password;not null"`
@@ -94,10 +95,10 @@ func SaveOne(data interface{}) error {
 
 // You could update properties of an UserModel to database returning with error info.
 //
-//	err := db.Model(userModel).Update(UserModel{Username: "wangzitian0"}).Error
+//	err := db.Model(userModel).Updates(UserModel{Username: "wangzitian0"}).Error
 func (model *UserModel) Update(data interface{}) error {
 	db := common.GetDB()
-	err := db.Model(model).Update(data).Error
+	err := db.Model(model).Updates(data).Error
 	return err
 }
 
@@ -132,10 +133,7 @@ func (u UserModel) isFollowing(v UserModel) bool {
 //	err = userModel1.unFollowing(userModel2)
 func (u UserModel) unFollowing(v UserModel) error {
 	db := common.GetDB()
-	err := db.Where(FollowModel{
-		FollowingID:  v.ID,
-		FollowedByID: u.ID,
-	}).Delete(FollowModel{}).Error
+	err := db.Where("following_id = ? AND followed_by_id = ?", v.ID, u.ID).Delete(&FollowModel{}).Error
 	return err
 }
 
@@ -144,17 +142,13 @@ func (u UserModel) unFollowing(v UserModel) error {
 //	followings := userModel.GetFollowings()
 func (u UserModel) GetFollowings() []UserModel {
 	db := common.GetDB()
-	tx := db.Begin()
 	var follows []FollowModel
 	var followings []UserModel
-	tx.Where(FollowModel{
+	db.Preload("Following").Where(FollowModel{
 		FollowedByID: u.ID,
 	}).Find(&follows)
 	for _, follow := range follows {
-		var userModel UserModel
-		tx.Model(&follow).Related(&userModel, "Following")
-		followings = append(followings, userModel)
+		followings = append(followings, follow.Following)
 	}
-	tx.Commit()
 	return followings
 }

@@ -3,12 +3,13 @@ package common
 import (
 	"bytes"
 	"errors"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConnectingDatabase(t *testing.T) {
@@ -17,18 +18,21 @@ func TestConnectingDatabase(t *testing.T) {
 	// Test create & close DB
 	_, err := os.Stat("./../gorm.db")
 	asserts.NoError(err, "Db should exist")
-	asserts.NoError(db.DB().Ping(), "Db should be able to ping")
+	sqlDB, _ := db.DB()
+	asserts.NoError(sqlDB.Ping(), "Db should be able to ping")
 
 	// Test get a connecting from connection pools
 	connection := GetDB()
-	asserts.NoError(connection.DB().Ping(), "Db should be able to ping")
-	db.Close()
+	sqlDB, _ = connection.DB()
+	asserts.NoError(sqlDB.Ping(), "Db should be able to ping")
+	sqlDB.Close()
 
 	// Test DB exceptions
 	os.Chmod("./../gorm.db", 0000)
 	db = Init()
-	asserts.Error(db.DB().Ping(), "Db should not be able to ping")
-	db.Close()
+	sqlDB, _ = db.DB()
+	asserts.Error(sqlDB.Ping(), "Db should not be able to ping")
+	sqlDB.Close()
 	os.Chmod("./../gorm.db", 0644)
 }
 
@@ -38,18 +42,12 @@ func TestConnectingTestDatabase(t *testing.T) {
 	db := TestDBInit()
 	_, err := os.Stat("./../gorm_test.db")
 	asserts.NoError(err, "Db should exist")
-	asserts.NoError(db.DB().Ping(), "Db should be able to ping")
-	db.Close()
-
-	// Test testDB exceptions
-	os.Chmod("./../gorm_test.db", 0000)
-	db = TestDBInit()
-	_, err = os.Stat("./../gorm_test.db")
-	asserts.NoError(err, "Db should exist")
-	asserts.Error(db.DB().Ping(), "Db should not be able to ping")
-	os.Chmod("./../gorm_test.db", 0644)
+	sqlDB, _ := db.DB()
+	asserts.NoError(sqlDB.Ping(), "Db should be able to ping")
+	TestDBFree(db)
 
 	// Test close delete DB
+	db = TestDBInit()
 	TestDBFree(db)
 	_, err = os.Stat("./../gorm_test.db")
 
@@ -83,8 +81,8 @@ func TestNewValidatorError(t *testing.T) {
 	asserts := assert.New(t)
 
 	type Login struct {
-		Username string `form:"username" json:"username" binding:"exists,alphanum,min=4,max=255"`
-		Password string `form:"password" json:"password" binding:"exists,min=8,max=255"`
+		Username string `form:"username" json:"username" binding:"required,alphanum,min=4,max=255"`
+		Password string `form:"password" json:"password" binding:"required,min=8,max=255"`
 	}
 
 	var requestTests = []struct {

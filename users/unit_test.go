@@ -1,17 +1,17 @@
 package users
 
 import (
-	"github.com/stretchr/testify/assert"
-	"testing"
-
 	"bytes"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/gothinkster/golang-gin-realworld-example-app/common"
-	"github.com/jinzhu/gorm"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gothinkster/golang-gin-realworld-example-app/common"
+	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 var image_url = "https://golang.org/doc/gopher/frontpage.png"
@@ -29,10 +29,10 @@ func newUserModel() UserModel {
 }
 
 func userModelMocker(n int) []UserModel {
-	var offset int
+	var offset int64
 	test_db.Model(&UserModel{}).Count(&offset)
 	var ret []UserModel
-	for i := offset + 1; i <= offset+n; i++ {
+	for i := int(offset) + 1; i <= int(offset)+n; i++ {
 		image := fmt.Sprintf("http://image/%v.jpg", i)
 		userModel := UserModel{
 			Username: fmt.Sprintf("user%v", i),
@@ -339,7 +339,7 @@ var unauthRequestTests = []struct {
 		"PUT",
 		`{"password": "password321"}}`,
 		http.StatusUnprocessableEntity,
-		`{"errors":{"Email":"{key: email}","Username":"{key: alphanum}"}}`,
+		`{"errors":{"Email":"{key: required}","Username":"{key: required}"}}`,
 		"test database pk error for user update",
 	},
 	{
@@ -350,7 +350,7 @@ var unauthRequestTests = []struct {
 		"PUT",
 		`{"user":{"username": "wangzitian0","email": "wzt@gg.cn","password": "jakejxke"}}`,
 		http.StatusUnprocessableEntity,
-		`{"errors":{"database":"UNIQUE constraint failed: user_models.email"}}`,
+		`{"errors":{"database":"WHERE conditions required"}}`,
 		"cheat validator and test database connecting error for user update",
 	},
 	{

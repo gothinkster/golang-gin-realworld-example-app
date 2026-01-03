@@ -24,6 +24,7 @@ gorm.db
 gorm_test.db
 *.db
 coverage.txt
+coverage.out
 profile.out
 results.sarif
 
