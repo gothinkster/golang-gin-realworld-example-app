@@ -1516,3 +1516,102 @@ func TestMain(m *testing.M) {
 	common.TestDBFree(test_db)
 	os.Exit(exitVal)
 }
+
+func TestArticleUpdateAuthorizationForbidden(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := setupRouter()
+	user1 := createTestUser()
+	user2 := createTestUser()
+
+	// Create an article with user1
+	articleUserModel := GetArticleUserModel(user1)
+	slug := fmt.Sprintf("auth-test-article-%d", common.RandInt())
+	article := ArticleModel{
+		Slug:        slug,
+		Title:       "Auth Test Article",
+		Description: "Test Description",
+		Body:        "Test Body",
+		Author:      articleUserModel,
+		AuthorID:    articleUserModel.ID,
+	}
+	SaveOne(&article)
+
+	// Try to update with user2 (should fail with 403)
+	req, _ := http.NewRequest("PUT", fmt.Sprintf("/api/articles/%s", slug), bytes.NewBufferString(`{"article":{"body":"Hacked Body"}}`))
+	req.Header.Set("Content-Type", "application/json")
+	HeaderTokenMock(req, user2.ID)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	asserts.Equal(http.StatusForbidden, w.Code, "Non-author update should return 403")
+	asserts.Contains(w.Body.String(), "you are not the author", "Error should mention authorization")
+}
+
+func TestArticleDeleteAuthorizationForbidden(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := setupRouter()
+	user1 := createTestUser()
+	user2 := createTestUser()
+
+	// Create an article with user1
+	articleUserModel := GetArticleUserModel(user1)
+	slug := fmt.Sprintf("auth-delete-test-%d", common.RandInt())
+	article := ArticleModel{
+		Slug:        slug,
+		Title:       "Auth Delete Test",
+		Description: "Test Description",
+		Body:        "Test Body",
+		Author:      articleUserModel,
+		AuthorID:    articleUserModel.ID,
+	}
+	SaveOne(&article)
+
+	// Try to delete with user2 (should fail with 403)
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/api/articles/%s", slug), nil)
+	HeaderTokenMock(req, user2.ID)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	asserts.Equal(http.StatusForbidden, w.Code, "Non-author delete should return 403")
+}
+
+func TestCommentDeleteAuthorizationForbidden(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := setupRouter()
+	user1 := createTestUser()
+	user2 := createTestUser()
+
+	// Create article and comment with user1
+	articleUserModel := GetArticleUserModel(user1)
+	slug := fmt.Sprintf("comment-auth-test-%d", common.RandInt())
+	article := ArticleModel{
+		Slug:        slug,
+		Title:       "Comment Auth Test",
+		Description: "Test Description",
+		Body:        "Test Body",
+		Author:      articleUserModel,
+		AuthorID:    articleUserModel.ID,
+	}
+	SaveOne(&article)
+
+	comment := CommentModel{
+		Article:  article,
+		ArticleID: article.ID,
+		Author:   articleUserModel,
+		AuthorID: articleUserModel.ID,
+		Body:     "Test comment",
+	}
+	SaveOne(&comment)
+
+	// Try to delete comment with user2 (should fail with 403)
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/api/articles/%s/comments/%d", slug, comment.ID), nil)
+	HeaderTokenMock(req, user2.ID)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	asserts.Equal(http.StatusForbidden, w.Code, "Non-author comment delete should return 403")
+	asserts.Contains(w.Body.String(), "you are not the author", "Error should mention authorization")
+}

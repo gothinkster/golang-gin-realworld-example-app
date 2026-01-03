@@ -195,3 +195,70 @@ func TestNewError(t *testing.T) {
 	assert.Equal(expectedError,
 		commenError.Errors, "commenError should have right error info")
 }
+
+func TestDatabaseDirCreation(t *testing.T) {
+	asserts := assert.New(t)
+
+	// Test directory creation in Init
+	origDBPath := os.Getenv("DB_PATH")
+	defer os.Setenv("DB_PATH", origDBPath)
+
+	// Create a temp dir path
+	tempDir := "./tmp/test_nested/db"
+	os.Setenv("DB_PATH", tempDir+"/test.db")
+	
+	// Clean up before test
+	os.RemoveAll("./tmp/test_nested")
+	
+	// Init should create the directory
+	db := Init()
+	sqlDB, _ := db.DB()
+	asserts.NoError(sqlDB.Ping(), "DB should be created in nested directory")
+	
+	// Clean up after test
+	sqlDB.Close()
+	os.RemoveAll("./tmp/test_nested")
+}
+
+func TestTestDatabaseDirCreation(t *testing.T) {
+	asserts := assert.New(t)
+
+	// Test directory creation in TestDBInit
+	origTestDBPath := os.Getenv("TestDB_PATH")
+	defer os.Setenv("TestDB_PATH", origTestDBPath)
+
+	// Create a temp dir path
+	tempDir := "./tmp/test_nested_testdb"
+	os.Setenv("TestDB_PATH", tempDir+"/test.db")
+	
+	// Clean up before test
+	os.RemoveAll(tempDir)
+	
+	// TestDBInit should create the directory
+	db := TestDBInit()
+	sqlDB, _ := db.DB()
+	asserts.NoError(sqlDB.Ping(), "Test DB should be created in nested directory")
+	
+	// Clean up after test
+	TestDBFree(db)
+	os.RemoveAll(tempDir)
+}
+
+func TestDatabaseWithCurrentDirectory(t *testing.T) {
+	asserts := assert.New(t)
+
+	// Test with simple filename (no directory)
+	origDBPath := os.Getenv("DB_PATH")
+	defer os.Setenv("DB_PATH", origDBPath)
+
+	os.Setenv("DB_PATH", "test_simple.db")
+	
+	// Init should work without directory creation
+	db := Init()
+	sqlDB, _ := db.DB()
+	asserts.NoError(sqlDB.Ping(), "DB should be created in current directory")
+	
+	// Clean up
+	sqlDB.Close()
+	os.Remove("test_simple.db")
+}
