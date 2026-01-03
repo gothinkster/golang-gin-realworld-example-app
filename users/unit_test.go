@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	_ "regexp"
 )
 
 var image_url = "https://golang.org/doc/gopher/frontpage.png"

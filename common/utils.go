@@ -67,7 +67,7 @@ func NewValidatorError(err error) CommonError {
 	return res
 }
 
-// Warp the error info in a object
+// Wrap the error info in an object
 func NewError(key string, err error) CommonError {
 	res := CommonError{}
 	res.Errors = make(map[string]interface{})
