@@ -2,8 +2,8 @@ package users
 
 import (
 	"errors"
-	"github.com/gothinkster/golang-gin-realworld-example-app/common"
 	"github.com/gin-gonic/gin"
+	"github.com/gothinkster/golang-gin-realworld-example-app/common"
 	"net/http"
 )
 

@@ -2,9 +2,9 @@ package articles
 
 import (
 	"errors"
+	"github.com/gin-gonic/gin"
 	"github.com/gothinkster/golang-gin-realworld-example-app/common"
 	"github.com/gothinkster/golang-gin-realworld-example-app/users"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 )

@@ -2,9 +2,9 @@ package articles
 
 import (
 	_ "fmt"
-	"github.com/jinzhu/gorm"
 	"github.com/gothinkster/golang-gin-realworld-example-app/common"
 	"github.com/gothinkster/golang-gin-realworld-example-app/users"
+	"github.com/jinzhu/gorm"
 	"strconv"
 )
 

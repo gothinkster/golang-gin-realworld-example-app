@@ -21,6 +21,8 @@ vendor/*
 
 tmp/*
 gorm.db
+gorm_test.db
 coverage.txt
+profile.out
 
 bak.*

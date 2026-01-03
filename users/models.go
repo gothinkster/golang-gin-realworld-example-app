@@ -2,8 +2,8 @@ package users
 
 import (
 	"errors"
-	"github.com/jinzhu/gorm"
 	"github.com/gothinkster/golang-gin-realworld-example-app/common"
+	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,8 +27,9 @@ type UserModel struct {
 // DB schema looks like: id, created_at, updated_at, deleted_at, following_id, followed_by_id.
 //
 // Retrieve them by:
-// 	db.Where(FollowModel{ FollowingID:  v.ID, FollowedByID: u.ID, }).First(&follow)
-// 	db.Where(FollowModel{ FollowedByID: u.ID, }).Find(&follows)
+//
+//	db.Where(FollowModel{ FollowingID:  v.ID, FollowedByID: u.ID, }).First(&follow)
+//	db.Where(FollowModel{ FollowedByID: u.ID, }).Find(&follows)
 //
 // More details about gorm.Model: http://jinzhu.me/gorm/models.html#conventions
 type FollowModel struct {
@@ -50,7 +51,8 @@ func AutoMigrate() {
 // What's bcrypt? https://en.wikipedia.org/wiki/Bcrypt
 // Golang bcrypt doc: https://godoc.org/golang.org/x/crypto/bcrypt
 // You can change the value in bcrypt.DefaultCost to adjust the security index.
-// 	err := userModel.setPassword("password0")
+//
+//	err := userModel.setPassword("password0")
 func (u *UserModel) setPassword(password string) error {
 	if len(password) == 0 {
 		return errors.New("password should not be empty!")
@@ -63,7 +65,8 @@ func (u *UserModel) setPassword(password string) error {
 }
 
 // Database will only save the hashed string, you should check it by util function.
-// 	if err := serModel.checkPassword("password0"); err != nil { password error }
+//
+//	if err := serModel.checkPassword("password0"); err != nil { password error }
 func (u *UserModel) checkPassword(password string) error {
 	bytePassword := []byte(password)
 	byteHashedPassword := []byte(u.PasswordHash)
@@ -71,7 +74,8 @@ func (u *UserModel) checkPassword(password string) error {
 }
 
 // You could input the conditions and it will return an UserModel in database with error info.
-// 	userModel, err := FindOneUser(&UserModel{Username: "username0"})
+//
+//	userModel, err := FindOneUser(&UserModel{Username: "username0"})
 func FindOneUser(condition interface{}) (UserModel, error) {
 	db := common.GetDB()
 	var model UserModel
@@ -80,7 +84,8 @@ func FindOneUser(condition interface{}) (UserModel, error) {
 }
 
 // You could input an UserModel which will be saved in database returning with error info
-// 	if err := SaveOne(&userModel); err != nil { ... }
+//
+//	if err := SaveOne(&userModel); err != nil { ... }
 func SaveOne(data interface{}) error {
 	db := common.GetDB()
 	err := db.Save(data).Error
@@ -88,7 +93,8 @@ func SaveOne(data interface{}) error {
 }
 
 // You could update properties of an UserModel to database returning with error info.
-//  err := db.Model(userModel).Update(UserModel{Username: "wangzitian0"}).Error
+//
+//	err := db.Model(userModel).Update(UserModel{Username: "wangzitian0"}).Error
 func (model *UserModel) Update(data interface{}) error {
 	db := common.GetDB()
 	err := db.Model(model).Update(data).Error
@@ -96,7 +102,8 @@ func (model *UserModel) Update(data interface{}) error {
 }
 
 // You could add a following relationship as userModel1 following userModel2
-// 	err = userModel1.following(userModel2)
+//
+//	err = userModel1.following(userModel2)
 func (u UserModel) following(v UserModel) error {
 	db := common.GetDB()
 	var follow FollowModel
@@ -108,7 +115,8 @@ func (u UserModel) following(v UserModel) error {
 }
 
 // You could check whether  userModel1 following userModel2
-// 	followingBool = myUserModel.isFollowing(self.UserModel)
+//
+//	followingBool = myUserModel.isFollowing(self.UserModel)
 func (u UserModel) isFollowing(v UserModel) bool {
 	db := common.GetDB()
 	var follow FollowModel
@@ -120,7 +128,8 @@ func (u UserModel) isFollowing(v UserModel) bool {
 }
 
 // You could delete a following relationship as userModel1 following userModel2
-// 	err = userModel1.unFollowing(userModel2)
+//
+//	err = userModel1.unFollowing(userModel2)
 func (u UserModel) unFollowing(v UserModel) error {
 	db := common.GetDB()
 	err := db.Where(FollowModel{
@@ -131,7 +140,8 @@ func (u UserModel) unFollowing(v UserModel) error {
 }
 
 // You could get a following list of userModel
-// 	followings := userModel.GetFollowings()
+//
+//	followings := userModel.GetFollowings()
 func (u UserModel) GetFollowings() []UserModel {
 	db := common.GetDB()
 	tx := db.Begin()
