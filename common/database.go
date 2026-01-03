@@ -44,9 +44,12 @@ func TestDBInit() *gorm.DB {
 
 // Delete the database after running testing cases.
 func TestDBFree(test_db *gorm.DB) error {
-	sqlDB, _ := test_db.DB()
+	sqlDB, err := test_db.DB()
+	if err != nil {
+		return err
+	}
 	sqlDB.Close()
-	err := os.Remove("./../gorm_test.db")
+	err = os.Remove("./../gorm_test.db")
 	return err
 }
 

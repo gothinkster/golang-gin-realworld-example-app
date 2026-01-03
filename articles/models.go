@@ -70,6 +70,9 @@ func (article ArticleModel) favoritesCount() uint {
 	db.Model(&FavoriteModel{}).Where(FavoriteModel{
 		FavoriteID: article.ID,
 	}).Count(&count)
+	if count < 0 {
+		return 0
+	}
 	return uint(count)
 }
 
@@ -145,7 +148,10 @@ func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleMod
 		var tagModel TagModel
 		tx.Where(TagModel{Tag: tag}).First(&tagModel)
 		if tagModel.ID != 0 {
-			tx.Model(&tagModel).Offset(offset_int).Limit(limit_int).Association("ArticleModels").Find(&models)
+			if err := tx.Model(&tagModel).Offset(offset_int).Limit(limit_int).Association("ArticleModels").Find(&models); err != nil {
+				tx.Rollback()
+				return models, count, err
+			}
 			count = int(tx.Model(&tagModel).Association("ArticleModels").Count())
 		}
 	} else if author != "" {
@@ -155,7 +161,10 @@ func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleMod
 
 		if articleUserModel.ID != 0 {
 			count = int(tx.Model(&articleUserModel).Association("ArticleModels").Count())
-			tx.Model(&articleUserModel).Offset(offset_int).Limit(limit_int).Association("ArticleModels").Find(&models)
+			if err := tx.Model(&articleUserModel).Offset(offset_int).Limit(limit_int).Association("ArticleModels").Find(&models); err != nil {
+				tx.Rollback()
+				return models, count, err
+			}
 		}
 	} else if favorited != "" {
 		var userModel users.UserModel
