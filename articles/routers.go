@@ -14,6 +14,7 @@ func ArticlesRegister(router *gin.RouterGroup) {
 	router.POST("", ArticleCreate)
 	router.POST("/", ArticleCreate)
 	router.PUT("/:slug", ArticleUpdate)
+	router.PUT("/:slug/", ArticleUpdate)
 	router.DELETE("/:slug", ArticleDelete)
 	router.POST("/:slug/favorite", ArticleFavorite)
 	router.DELETE("/:slug/favorite", ArticleUnfavorite)
