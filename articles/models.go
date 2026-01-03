@@ -70,6 +70,9 @@ func (article ArticleModel) favoritesCount() uint {
 	db.Model(&FavoriteModel{}).Where(FavoriteModel{
 		FavoriteID: article.ID,
 	}).Count(&count)
+	if count < 0 {
+		return 0
+	}
 	return uint(count)
 }
 
