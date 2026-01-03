@@ -1,6 +1,8 @@
 package articles
 
 import (
+	"sort"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gosimple/slug"
 	"github.com/gothinkster/golang-gin-realworld-example-app/users"
@@ -84,6 +86,7 @@ func (s *ArticleSerializer) Response() ArticleResponse {
 		serializer := TagSerializer{s.C, tag}
 		response.Tags = append(response.Tags, serializer.Response())
 	}
+	sort.Strings(response.Tags)
 	return response
 }
 
