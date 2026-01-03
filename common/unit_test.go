@@ -3,6 +3,7 @@ package common
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -109,6 +110,35 @@ func TestGenTokenMultipleUsers(t *testing.T) {
 	asserts.LessOrEqual(len(token1), 120, "JWT's length should be <= 120 for user 1")
 	asserts.GreaterOrEqual(len(token100), 114, "JWT's length should be >= 114 for user 100")
 	asserts.LessOrEqual(len(token100), 120, "JWT's length should be <= 120 for user 100")
+}
+
+func TestHeaderTokenMock(t *testing.T) {
+	asserts := assert.New(t)
+
+	req, _ := http.NewRequest("GET", "/test", nil)
+	token := GenToken(5)
+	HeaderTokenMock(req, 5)
+
+	authHeader := req.Header.Get("Authorization")
+	asserts.Equal(fmt.Sprintf("Token %s", token), authHeader, "Authorization header should be set correctly")
+}
+
+func TestExtractTokenFromHeader(t *testing.T) {
+	asserts := assert.New(t)
+
+	token := "valid.jwt.token"
+	header := fmt.Sprintf("Token %s", token)
+
+	extracted := ExtractTokenFromHeader(header)
+	asserts.Equal(token, extracted, "Should extract token from header")
+
+	invalidHeader := "Bearer " + token
+	extracted = ExtractTokenFromHeader(invalidHeader)
+	asserts.Empty(extracted, "Should return empty for non-Token header")
+
+	shortHeader := "Token"
+	extracted = ExtractTokenFromHeader(shortHeader)
+	asserts.Empty(extracted, "Should return empty for short header")
 }
 
 func TestNewValidatorError(t *testing.T) {
