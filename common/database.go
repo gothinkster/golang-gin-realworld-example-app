@@ -21,8 +21,12 @@ func Init() *gorm.DB {
 	if err != nil {
 		fmt.Println("db err: (Init) ", err)
 	}
-	sqlDB, _ := db.DB()
-	sqlDB.SetMaxIdleConns(10)
+	sqlDB, err := db.DB()
+	if err != nil {
+		fmt.Println("db err: (Init - get sql.DB) ", err)
+	} else {
+		sqlDB.SetMaxIdleConns(10)
+	}
 	//db.LogMode(true)
 	DB = db
 	return DB
@@ -36,8 +40,12 @@ func TestDBInit() *gorm.DB {
 	if err != nil {
 		fmt.Println("db err: (TestDBInit) ", err)
 	}
-	sqlDB, _ := test_db.DB()
-	sqlDB.SetMaxIdleConns(3)
+	sqlDB, err := test_db.DB()
+	if err != nil {
+		fmt.Println("db err: (TestDBInit - get sql.DB) ", err)
+	} else {
+		sqlDB.SetMaxIdleConns(3)
+	}
 	DB = test_db
 	return DB
 }
@@ -48,7 +56,9 @@ func TestDBFree(test_db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	sqlDB.Close()
+	if err := sqlDB.Close(); err != nil {
+		return err
+	}
 	err = os.Remove("./../gorm_test.db")
 	return err
 }
