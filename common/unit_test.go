@@ -70,6 +70,22 @@ func TestRandString(t *testing.T) {
 	}
 }
 
+func TestRandInt(t *testing.T) {
+	asserts := assert.New(t)
+
+	// Test that RandInt returns a value in valid range
+	val := RandInt()
+	asserts.GreaterOrEqual(val, 0, "RandInt should be >= 0")
+	asserts.Less(val, 1000000, "RandInt should be < 1000000")
+
+	// Test multiple calls return different values (statistically)
+	vals := make(map[int]bool)
+	for i := 0; i < 10; i++ {
+		vals[RandInt()] = true
+	}
+	asserts.Greater(len(vals), 1, "RandInt should return varied values")
+}
+
 func TestGenToken(t *testing.T) {
 	asserts := assert.New(t)
 

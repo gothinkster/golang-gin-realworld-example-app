@@ -124,7 +124,7 @@ var unauthRequestTests = []struct {
 		"POST",
 		`{"user":{"username": "wangzitian0","email": "wzt@gg.cn","password": "jakejxke"}}`,
 		http.StatusCreated,
-		`{"user":{"username":"wangzitian0","email":"wzt@gg.cn","bio":"","image":null,"token":"([a-zA-Z0-9-_.]{115})"}}`,
+		`{"user":{"username":"wangzitian0","email":"wzt@gg.cn","bio":"","image":"","token":"([a-zA-Z0-9-_.]{115})"}}`,
 		"valid data and should return StatusCreated",
 	},
 	{
@@ -489,6 +489,62 @@ func TestWithoutAuth(t *testing.T) {
 		asserts.Equal(testData.expectedCode, w.Code, "Response Status - "+testData.msg)
 		asserts.Regexp(testData.responseRegexg, w.Body.String(), "Response Content - "+testData.msg)
 	}
+}
+
+func TestExtractTokenFromQueryParameter(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := gin.New()
+	r.Use(AuthMiddleware(false))
+	r.GET("/test", func(c *gin.Context) {
+		userID := c.MustGet("my_user_id").(uint)
+		c.JSON(http.StatusOK, gin.H{"user_id": userID})
+	})
+
+	resetDBWithMock()
+
+	// Test with access_token query parameter
+	token := common.GenToken(1)
+	req, _ := http.NewRequest("GET", "/test?access_token="+token, nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	asserts.Equal(http.StatusOK, w.Code, "Request with query token should succeed")
+	asserts.Contains(w.Body.String(), `"user_id":1`, "User ID should be 1")
+}
+
+func TestAuthMiddlewareInvalidToken(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := gin.New()
+	r.Use(AuthMiddleware(true))
+	r.GET("/test", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
+
+	// Test with invalid JWT token
+	req, _ := http.NewRequest("GET", "/test", nil)
+	req.Header.Set("Authorization", "Token invalid.jwt.token")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	asserts.Equal(http.StatusUnauthorized, w.Code, "Invalid token should return 401")
+}
+
+func TestAuthMiddlewareNoToken(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := gin.New()
+	r.Use(AuthMiddleware(false))
+	r.GET("/test", func(c *gin.Context) {
+		userID := c.MustGet("my_user_id").(uint)
+		c.JSON(http.StatusOK, gin.H{"user_id": userID})
+	})
+
+	// Test with no token (auto401=false should still proceed)
+	req, _ := http.NewRequest("GET", "/test", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	asserts.Equal(http.StatusOK, w.Code, "No token with auto401=false should proceed")
+	asserts.Contains(w.Body.String(), `"user_id":0`, "User ID should be 0")
 }
 
 // This is a hack way to add test database for each case, as whole test will just share one database.

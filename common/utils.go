@@ -23,6 +23,11 @@ func RandString(n int) string {
 	return string(b)
 }
 
+// A helper function to generate random int
+func RandInt() int {
+	return rand.Intn(1000000)
+}
+
 // Keep this two config private, it should not expose to open source
 const NBSecretPassword = "A String Very Very Very Strong!!@##$!@#$"
 const NBRandomPassword = "A String Very Very Very Niubilty!!@##$!@#4"

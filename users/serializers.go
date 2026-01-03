@@ -13,21 +13,25 @@ type ProfileSerializer struct {
 
 // Declare your response schema here
 type ProfileResponse struct {
-	ID        uint    `json:"-"`
-	Username  string  `json:"username"`
-	Bio       string  `json:"bio"`
-	Image     *string `json:"image"`
-	Following bool    `json:"following"`
+	ID        uint   `json:"-"`
+	Username  string `json:"username"`
+	Bio       string `json:"bio"`
+	Image     string `json:"image"`
+	Following bool   `json:"following"`
 }
 
 // Put your response logic including wrap the userModel here.
 func (self *ProfileSerializer) Response() ProfileResponse {
 	myUserModel := self.C.MustGet("my_user_model").(UserModel)
+	image := ""
+	if self.Image != nil {
+		image = *self.Image
+	}
 	profile := ProfileResponse{
 		ID:        self.ID,
 		Username:  self.Username,
 		Bio:       self.Bio,
-		Image:     self.Image,
+		Image:     image,
 		Following: myUserModel.isFollowing(self.UserModel),
 	}
 	return profile
@@ -38,20 +42,24 @@ type UserSerializer struct {
 }
 
 type UserResponse struct {
-	Username string  `json:"username"`
-	Email    string  `json:"email"`
-	Bio      string  `json:"bio"`
-	Image    *string `json:"image"`
-	Token    string  `json:"token"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Bio      string `json:"bio"`
+	Image    string `json:"image"`
+	Token    string `json:"token"`
 }
 
 func (self *UserSerializer) Response() UserResponse {
 	myUserModel := self.c.MustGet("my_user_model").(UserModel)
+	image := ""
+	if myUserModel.Image != nil {
+		image = *myUserModel.Image
+	}
 	user := UserResponse{
 		Username: myUserModel.Username,
 		Email:    myUserModel.Email,
 		Bio:      myUserModel.Bio,
-		Image:    myUserModel.Image,
+		Image:    image,
 		Token:    common.GenToken(myUserModel.ID),
 	}
 	return user

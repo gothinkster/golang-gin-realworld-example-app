@@ -10,8 +10,8 @@ import (
 type ArticleModelValidator struct {
 	Article struct {
 		Title       string   `form:"title" json:"title" binding:"required,min=4"`
-		Description string   `form:"description" json:"description" binding:"max=2048"`
-		Body        string   `form:"body" json:"body" binding:"max=2048"`
+		Description string   `form:"description" json:"description" binding:"required,max=2048"`
+		Body        string   `form:"body" json:"body" binding:"required,max=2048"`
 		Tags        []string `form:"tagList" json:"tagList"`
 	} `json:"article"`
 	articleModel ArticleModel `json:"-"`
@@ -50,7 +50,7 @@ func (s *ArticleModelValidator) Bind(c *gin.Context) error {
 
 type CommentModelValidator struct {
 	Comment struct {
-		Body string `form:"body" json:"body" binding:"max=2048"`
+		Body string `form:"body" json:"body" binding:"required,max=2048"`
 	} `json:"comment"`
 	commentModel CommentModel `json:"-"`
 }

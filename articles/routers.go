@@ -178,7 +178,7 @@ func ArticleCommentCreate(c *gin.Context) {
 		return
 	}
 	serializer := CommentSerializer{c, commentModelValidator.commentModel}
-	c.JSON(http.StatusCreated, gin.H{"comment": serializer.Response()})
+	c.JSON(http.StatusOK, gin.H{"comment": serializer.Response()})
 }
 
 func ArticleCommentDelete(c *gin.Context) {

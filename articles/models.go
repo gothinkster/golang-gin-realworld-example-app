@@ -236,9 +236,17 @@ func (self *ArticleUserModel) GetArticleFeed(limit, offset string) ([]ArticleMod
 		articleUserModels = append(articleUserModels, articleUserModel.ID)
 	}
 
-	tx.Preload("Author.UserModel").Preload("Tags").Where("author_id in (?)", articleUserModels).Order("updated_at desc").Offset(offset_int).Limit(limit_int).Find(&models)
+	if len(articleUserModels) > 0 {
+		var count64 int64
+		tx.Model(&ArticleModel{}).Where("author_id in (?)", articleUserModels).Count(&count64)
+		count = int(count64)
+		tx.Preload("Author.UserModel").Preload("Tags").Where("author_id in (?)", articleUserModels).Order("updated_at desc").Offset(offset_int).Limit(limit_int).Find(&models)
+	}
 
 	err := tx.Commit().Error
+	if models == nil {
+		models = []ArticleModel{}
+	}
 	return models, count, err
 }
 
