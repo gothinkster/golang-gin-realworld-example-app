@@ -15,10 +15,7 @@ import (
 func TestConnectingDatabase(t *testing.T) {
 	asserts := assert.New(t)
 	db := Init()
-	dbPath := os.Getenv("DB_PATH")
-	if dbPath == "" {
-		dbPath = "./data/gorm.db"
-	}
+	dbPath := GetDBPath()
 	// Test create & close DB
 	_, err := os.Stat(dbPath)
 	asserts.NoError(err, "Db should exist")
@@ -44,10 +41,7 @@ func TestConnectingTestDatabase(t *testing.T) {
 	asserts := assert.New(t)
 	// Test create & close DB
 	db := TestDBInit()
-	testDBPath := os.Getenv("TEST_DB_PATH")
-	if testDBPath == "" {
-		testDBPath = "./data/gorm_test.db"
-	}
+	testDBPath := GetTestDBPath()
 	_, err := os.Stat(testDBPath)
 	asserts.NoError(err, "Db should exist")
 	sqlDB, _ := db.DB()

@@ -67,22 +67,27 @@ https://golang.org/doc/install
 
 ## Environment Config
 
-1. Copy the example environment file:
-```bash
-cp .env.example .env
-```
+Environment variables can be set directly in your shell or via a `.env` file (requires a tool like `source` or `direnv`).
 
-2. Edit `.env` to configure your settings:
+Available environment variables:
 ```bash
-# Server Configuration
 PORT=8080                    # Server port (default: 8080)
-GIN_MODE=debug              # debug or release
-
-# Database Configuration
-DB_PATH=./data/gorm.db      # SQLite database path
+GIN_MODE=debug              # Gin mode: debug or release
+DB_PATH=./data/gorm.db      # SQLite database path (default: ./data/gorm.db)
 ```
 
-3. Set up Go environment variables according to https://golang.org/doc/install#install
+Example usage:
+```bash
+# Option 1: Set environment variables directly
+export PORT=3000
+export DB_PATH=./data/myapp.db
+go run hello.go
+
+# Option 2: Inline with command
+PORT=3000 go run hello.go
+```
+
+See `.env.example` for a complete template.
 
 
 ## Install Dependencies
