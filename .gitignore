@@ -38,3 +38,4 @@ results.sarif
 .env.*.local
 
 bak.*
+tmp/

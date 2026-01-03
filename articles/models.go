@@ -153,6 +153,10 @@ func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleMod
 				return models, count, err
 			}
 			count = int(tx.Model(&tagModel).Association("ArticleModels").Count())
+			// Preload Tags and Author for each article
+			for i := range models {
+				tx.Preload("Author.UserModel").Preload("Tags").First(&models[i], models[i].ID)
+			}
 		}
 	} else if author != "" {
 		var userModel users.UserModel
@@ -164,6 +168,10 @@ func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleMod
 			if err := tx.Model(&articleUserModel).Offset(offset_int).Limit(limit_int).Association("ArticleModels").Find(&models); err != nil {
 				tx.Rollback()
 				return models, count, err
+			}
+			// Preload Tags and Author for each article
+			for i := range models {
+				tx.Preload("Author.UserModel").Preload("Tags").First(&models[i], models[i].ID)
 			}
 		}
 	} else if favorited != "" {

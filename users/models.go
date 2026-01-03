@@ -65,6 +65,11 @@ func (u *UserModel) setPassword(password string) error {
 	return nil
 }
 
+// SetPassword is a public wrapper for setPassword, used for testing
+func (u *UserModel) SetPassword(password string) error {
+	return u.setPassword(password)
+}
+
 // Database will only save the hashed string, you should check it by util function.
 //
 //	if err := serModel.checkPassword("password0"); err != nil { password error }
