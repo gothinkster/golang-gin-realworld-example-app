@@ -197,7 +197,7 @@ func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleMod
 		tx.Model(&models[i].Author).Related(&models[i].Author.UserModel)
 		tx.Model(&models[i]).Related(&models[i].Tags, "Tags")
 	}
-	err = tx.Commit().Error
+	err := tx.Commit().Error
 	return models, count, err
 }
 
@@ -230,7 +230,7 @@ func (self *ArticleUserModel) GetArticleFeed(limit, offset string) ([]ArticleMod
 		tx.Model(&models[i].Author).Related(&models[i].Author.UserModel)
 		tx.Model(&models[i]).Related(&models[i].Tags, "Tags")
 	}
-	err = tx.Commit().Error
+	err := tx.Commit().Error
 	return models, count, err
 }
 
