@@ -327,9 +327,15 @@ func (model *ArticleModel) setTags(tags []string) error {
 		if existing, ok := existingTagMap[tag]; ok {
 			tagList = append(tagList, existing)
 		} else {
-			// Create new tag
+			// Create new tag with race condition handling
 			newTag := TagModel{Tag: tag}
 			if err := db.Create(&newTag).Error; err != nil {
+				// If creation failed (e.g., concurrent insert), try to fetch existing
+				var existing TagModel
+				if err2 := db.Where("tag = ?", tag).First(&existing).Error; err2 == nil {
+					tagList = append(tagList, existing)
+					continue
+				}
 				return err
 			}
 			tagList = append(tagList, newTag)
