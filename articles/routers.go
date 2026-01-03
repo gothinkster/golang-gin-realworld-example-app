@@ -103,7 +103,7 @@ func ArticleUpdate(c *gin.Context) {
 		return
 	}
 	myUserModel := c.MustGet("my_user_model").(users.UserModel)
-	if articleModel.AuthorID != GetArticleUserModel(myUserModel).ID {
+	if articleModel.Author.UserModelID != myUserModel.ID {
 		c.JSON(http.StatusForbidden, common.NewError("articles", errors.New("You are not the author of this article")))
 		return
 	}
@@ -130,7 +130,7 @@ func ArticleDelete(c *gin.Context) {
 		return
 	}
 	myUserModel := c.MustGet("my_user_model").(users.UserModel)
-	if articleModel.AuthorID != GetArticleUserModel(myUserModel).ID {
+	if articleModel.Author.UserModelID != myUserModel.ID {
 		c.JSON(http.StatusForbidden, common.NewError("articles", errors.New("You are not the author of this article")))
 		return
 	}
@@ -211,7 +211,7 @@ func ArticleCommentDelete(c *gin.Context) {
 		return
 	}
 	myUserModel := c.MustGet("my_user_model").(users.UserModel)
-	if commentModel.AuthorID != GetArticleUserModel(myUserModel).ID {
+	if commentModel.Author.UserModelID != myUserModel.ID {
 		c.JSON(http.StatusForbidden, common.NewError("comment", errors.New("You are not the author of this comment")))
 		return
 	}

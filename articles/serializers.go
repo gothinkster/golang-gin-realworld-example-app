@@ -4,7 +4,6 @@ import (
 	"sort"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gosimple/slug"
 	"github.com/gothinkster/golang-gin-realworld-example-app/users"
 )
 
@@ -70,7 +69,7 @@ func (s *ArticleSerializer) Response() ArticleResponse {
 	authorSerializer := ArticleUserSerializer{C: s.C, ArticleUserModel: s.Author}
 	response := ArticleResponse{
 		ID:          s.ID,
-		Slug:        slug.Make(s.Title),
+		Slug:        s.Slug,
 		Title:       s.Title,
 		Description: s.Description,
 		Body:        s.Body,
@@ -95,7 +94,7 @@ func (s *ArticleSerializer) ResponseWithPreloaded(favorited bool, favoritesCount
 	authorSerializer := ArticleUserSerializer{C: s.C, ArticleUserModel: s.Author}
 	response := ArticleResponse{
 		ID:             s.ID,
-		Slug:           slug.Make(s.Title),
+		Slug:           s.Slug,
 		Title:          s.Title,
 		Description:    s.Description,
 		Body:           s.Body,

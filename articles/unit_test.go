@@ -1585,7 +1585,7 @@ func TestCommentDeleteAuthorizationForbidden(t *testing.T) {
 	asserts.Equal(http.StatusForbidden, w.Code, "Delete comment by non-author should return 403")
 
 	// Verify comment still exists
-	foundComment, err := FindOneComment(comment.ID)
+	foundComment, err := FindOneComment(&CommentModel{Model: gorm.Model{ID: comment.ID}})
 	asserts.NoError(err, "Comment should still exist")
 	asserts.Equal(comment.ID, foundComment.ID, "Comment ID should match")
 }

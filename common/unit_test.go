@@ -170,6 +170,21 @@ func TestExtractTokenFromHeader(t *testing.T) {
 	asserts.Empty(extracted, "Should return empty for short header")
 }
 
+func TestVerifyTokenClaims(t *testing.T) {
+	asserts := assert.New(t)
+
+	// Test valid token
+	userID := uint(123)
+	token := GenToken(userID)
+	claims, err := VerifyTokenClaims(token)
+	asserts.NoError(err, "VerifyTokenClaims should not error for valid token")
+	asserts.Equal(float64(userID), claims["id"], "Claims should contain correct user ID")
+
+	// Test invalid token
+	_, err = VerifyTokenClaims("invalid.token.string")
+	asserts.Error(err, "VerifyTokenClaims should error for invalid token")
+}
+
 func TestNewValidatorError(t *testing.T) {
 	asserts := assert.New(t)
 

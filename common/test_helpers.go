@@ -31,5 +31,10 @@ func VerifyTokenClaims(tokenString string) (jwt.MapClaims, error) {
 		return nil, err
 	}
 
-	return token.Claims.(jwt.MapClaims), nil
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, fmt.Errorf("unexpected claims type: %T", token.Claims)
+	}
+
+	return claims, nil
 }

@@ -2,8 +2,9 @@
 package common
 
 import (
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -18,14 +19,22 @@ var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
 func RandString(n int) string {
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		randIdx, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			panic(err)
+		}
+		b[i] = letters[randIdx.Int64()]
 	}
 	return string(b)
 }
 
 // A helper function to generate random int
 func RandInt() int {
-	return rand.Intn(1000000)
+	randNum, err := rand.Int(rand.Reader, big.NewInt(1000000))
+	if err != nil {
+		panic(err)
+	}
+	return int(randNum.Int64())
 }
 
 // Keep this two config private, it should not expose to open source
