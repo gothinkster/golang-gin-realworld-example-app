@@ -44,9 +44,10 @@ jobs:
       if: matrix.go-version == '1.23'
       uses: coverallsapp/github-action@v2
       with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         file: ./coverage.out
         format: golang
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        flag-name: go-${{ matrix.go-version }}
 
   lint:
     name: Lint
