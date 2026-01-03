@@ -86,6 +86,48 @@ func (article ArticleModel) isFavoriteBy(user ArticleUserModel) bool {
 	return favorite.ID != 0
 }
 
+// BatchGetFavoriteCounts returns a map of article ID to favorite count
+func BatchGetFavoriteCounts(articleIDs []uint) map[uint]uint {
+	if len(articleIDs) == 0 {
+		return make(map[uint]uint)
+	}
+	db := common.GetDB()
+	
+	type result struct {
+		FavoriteID uint
+		Count      uint
+	}
+	var results []result
+	db.Model(&FavoriteModel{}).
+		Select("favorite_id, COUNT(*) as count").
+		Where("favorite_id IN ?", articleIDs).
+		Group("favorite_id").
+		Find(&results)
+	
+	countMap := make(map[uint]uint)
+	for _, r := range results {
+		countMap[r.FavoriteID] = r.Count
+	}
+	return countMap
+}
+
+// BatchGetFavoriteStatus returns a map of article ID to whether the user favorited it
+func BatchGetFavoriteStatus(articleIDs []uint, userID uint) map[uint]bool {
+	if len(articleIDs) == 0 || userID == 0 {
+		return make(map[uint]bool)
+	}
+	db := common.GetDB()
+	
+	var favorites []FavoriteModel
+	db.Where("favorite_id IN ? AND favorite_by_id = ?", articleIDs, userID).Find(&favorites)
+	
+	statusMap := make(map[uint]bool)
+	for _, f := range favorites {
+		statusMap[f.FavoriteID] = true
+	}
+	return statusMap
+}
+
 func (article ArticleModel) favoriteBy(user ArticleUserModel) error {
 	db := common.GetDB()
 	var favorite FavoriteModel
@@ -197,10 +239,13 @@ func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleMod
 			}).Offset(offset_int).Limit(limit_int).Find(&favoriteModels)
 
 			count = int(tx.Model(&articleUserModel).Association("FavoriteModels").Count())
-			for _, favorite := range favoriteModels {
-				var model ArticleModel
-				tx.Preload("Author.UserModel").Preload("Tags").First(&model, favorite.FavoriteID)
-				models = append(models, model)
+			// Batch fetch articles to avoid N+1 query
+			if len(favoriteModels) > 0 {
+				var ids []uint
+				for _, favorite := range favoriteModels {
+					ids = append(ids, favorite.FavoriteID)
+				}
+				tx.Preload("Author.UserModel").Preload("Tags").Where("id IN ?", ids).Order("updated_at desc").Find(&models)
 			}
 		}
 	} else {
@@ -216,7 +261,7 @@ func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleMod
 
 func (self *ArticleUserModel) GetArticleFeed(limit, offset string) ([]ArticleModel, int, error) {
 	db := common.GetDB()
-	var models []ArticleModel
+	models := make([]ArticleModel, 0)
 	var count int
 
 	offset_int, errOffset := strconv.Atoi(offset)
@@ -230,36 +275,65 @@ func (self *ArticleUserModel) GetArticleFeed(limit, offset string) ([]ArticleMod
 
 	tx := db.Begin()
 	followings := self.UserModel.GetFollowings()
-	var articleUserModels []uint
-	for _, following := range followings {
-		articleUserModel := GetArticleUserModel(following)
-		articleUserModels = append(articleUserModels, articleUserModel.ID)
-	}
-
-	if len(articleUserModels) > 0 {
-		var count64 int64
-		tx.Model(&ArticleModel{}).Where("author_id in (?)", articleUserModels).Count(&count64)
-		count = int(count64)
-		tx.Preload("Author.UserModel").Preload("Tags").Where("author_id in (?)", articleUserModels).Order("updated_at desc").Offset(offset_int).Limit(limit_int).Find(&models)
+	
+	// Batch get ArticleUserModel IDs to avoid N+1 query
+	if len(followings) > 0 {
+		var followingUserIDs []uint
+		for _, following := range followings {
+			followingUserIDs = append(followingUserIDs, following.ID)
+		}
+		
+		var articleUserModels []ArticleUserModel
+		tx.Where("user_model_id IN ?", followingUserIDs).Find(&articleUserModels)
+		
+		var authorIDs []uint
+		for _, aum := range articleUserModels {
+			authorIDs = append(authorIDs, aum.ID)
+		}
+		
+		if len(authorIDs) > 0 {
+			var count64 int64
+			tx.Model(&ArticleModel{}).Where("author_id IN ?", authorIDs).Count(&count64)
+			count = int(count64)
+			tx.Preload("Author.UserModel").Preload("Tags").Where("author_id IN ?", authorIDs).Order("updated_at desc").Offset(offset_int).Limit(limit_int).Find(&models)
+		}
 	}
 
 	err := tx.Commit().Error
-	if models == nil {
-		models = []ArticleModel{}
-	}
 	return models, count, err
 }
 
 func (model *ArticleModel) setTags(tags []string) error {
+	if len(tags) == 0 {
+		model.Tags = []TagModel{}
+		return nil
+	}
+	
 	db := common.GetDB()
+	
+	// Batch fetch existing tags
+	var existingTags []TagModel
+	db.Where("tag IN ?", tags).Find(&existingTags)
+	
+	// Create a map for quick lookup
+	existingTagMap := make(map[string]TagModel)
+	for _, t := range existingTags {
+		existingTagMap[t.Tag] = t
+	}
+	
+	// Create missing tags and build final list
 	var tagList []TagModel
 	for _, tag := range tags {
-		var tagModel TagModel
-		err := db.FirstOrCreate(&tagModel, TagModel{Tag: tag}).Error
-		if err != nil {
-			return err
+		if existing, ok := existingTagMap[tag]; ok {
+			tagList = append(tagList, existing)
+		} else {
+			// Create new tag
+			newTag := TagModel{Tag: tag}
+			if err := db.Create(&newTag).Error; err != nil {
+				return err
+			}
+			tagList = append(tagList, newTag)
 		}
-		tagList = append(tagList, tagModel)
 	}
 	model.Tags = tagList
 	return nil

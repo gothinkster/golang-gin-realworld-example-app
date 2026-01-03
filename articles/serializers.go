@@ -90,11 +90,53 @@ func (s *ArticleSerializer) Response() ArticleResponse {
 	return response
 }
 
+// ResponseWithPreloaded creates response using preloaded favorite data to avoid N+1 queries
+func (s *ArticleSerializer) ResponseWithPreloaded(favorited bool, favoritesCount uint) ArticleResponse {
+	authorSerializer := ArticleUserSerializer{s.C, s.Author}
+	response := ArticleResponse{
+		ID:             s.ID,
+		Slug:           slug.Make(s.Title),
+		Title:          s.Title,
+		Description:    s.Description,
+		Body:           s.Body,
+		CreatedAt:      s.CreatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
+		UpdatedAt:      s.UpdatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
+		Author:         authorSerializer.Response(),
+		Favorite:       favorited,
+		FavoritesCount: favoritesCount,
+	}
+	response.Tags = make([]string, 0)
+	for _, tag := range s.Tags {
+		serializer := TagSerializer{s.C, tag}
+		response.Tags = append(response.Tags, serializer.Response())
+	}
+	sort.Strings(response.Tags)
+	return response
+}
+
 func (s *ArticlesSerializer) Response() []ArticleResponse {
 	response := []ArticleResponse{}
+	if len(s.Articles) == 0 {
+		return response
+	}
+	
+	// Batch fetch favorite counts and status
+	var articleIDs []uint
+	for _, article := range s.Articles {
+		articleIDs = append(articleIDs, article.ID)
+	}
+	
+	favoriteCounts := BatchGetFavoriteCounts(articleIDs)
+	
+	myUserModel := s.C.MustGet("my_user_model").(users.UserModel)
+	articleUserModel := GetArticleUserModel(myUserModel)
+	favoriteStatus := BatchGetFavoriteStatus(articleIDs, articleUserModel.ID)
+	
 	for _, article := range s.Articles {
 		serializer := ArticleSerializer{s.C, article}
-		response = append(response, serializer.Response())
+		favorited := favoriteStatus[article.ID]
+		count := favoriteCounts[article.ID]
+		response = append(response, serializer.ResponseWithPreloaded(favorited, count))
 	}
 	return response
 }
