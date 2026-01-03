@@ -95,6 +95,22 @@ func TestGenToken(t *testing.T) {
 	asserts.Len(token, 115, "JWT's length should be 115")
 }
 
+func TestGenTokenMultipleUsers(t *testing.T) {
+	asserts := assert.New(t)
+
+	token1 := GenToken(1)
+	token2 := GenToken(2)
+	token100 := GenToken(100)
+
+	asserts.NotEqual(token1, token2, "Different user IDs should generate different tokens")
+	asserts.NotEqual(token2, token100, "Different user IDs should generate different tokens")
+	// Token length can vary by 1 character due to timestamp changes
+	asserts.GreaterOrEqual(len(token1), 114, "JWT's length should be >= 114 for user 1")
+	asserts.LessOrEqual(len(token1), 120, "JWT's length should be <= 120 for user 1")
+	asserts.GreaterOrEqual(len(token100), 114, "JWT's length should be >= 114 for user 100")
+	asserts.LessOrEqual(len(token100), 120, "JWT's length should be <= 120 for user 100")
+}
+
 func TestNewValidatorError(t *testing.T) {
 	asserts := assert.New(t)
 
@@ -175,6 +191,7 @@ func TestNewError(t *testing.T) {
 
 	commenError := NewError("database", db.Find(NotExist{heheda: "heheda"}).Error)
 	assert.IsType(commenError, commenError, "commenError should have right type")
-	assert.Equal(map[string]interface{}(map[string]interface{}{"database": "no such table: not_exists"}),
+	expectedError := map[string]interface{}{"database": "no such table: not_exists"}
+	assert.Equal(expectedError,
 		commenError.Errors, "commenError should have right error info")
 }
