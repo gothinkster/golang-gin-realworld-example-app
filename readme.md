@@ -19,6 +19,11 @@ This project has been modernized with the following updates:
 - **JWT v5**: Updated from deprecated dgrijalva/jwt-go to golang-jwt/jwt/v5 (fixes CVE-2020-26160)
 - **Validator v10**: Updated validator tags and package to match gin v1.10.0
 - **Latest Dependencies**: All dependencies updated to their latest stable versions
+- **RealWorld API Spec Compliance (2026)**:
+  - `GET /profiles/:username` now supports optional authentication (anonymous access allowed)
+  - `POST /users/login` returns 401 Unauthorized on failure (previously 403)
+  - `GET /articles/feed` registered as dedicated authenticated route
+  - `DELETE /articles/:slug` and `DELETE /articles/:slug/comments/:id` return empty response body
 
 
 # Directory structure

@@ -252,6 +252,17 @@ var unauthRequestTests = []struct {
 	{
 		func(req *http.Request) {
 			resetDBWithMock()
+		},
+		"/profiles/user1",
+		"GET",
+		``,
+		http.StatusOK,
+		`{"profile":{"username":"user1","bio":"bio1","image":"http://image/1.jpg","following":false}}`,
+		"anonymous request should return profile with following=false",
+	},
+	{
+		func(req *http.Request) {
+			resetDBWithMock()
 			HeaderTokenMock(req, 1)
 		},
 		"/profiles/user1",
