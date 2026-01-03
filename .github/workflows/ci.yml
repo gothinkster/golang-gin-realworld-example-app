@@ -46,6 +46,7 @@ jobs:
       with:
         file: ./coverage.out
         format: golang
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
   lint:
     name: Lint
