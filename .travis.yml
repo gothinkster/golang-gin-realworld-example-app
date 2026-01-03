@@ -20,4 +20,5 @@ script:
   - bash ./scripts/coverage.sh
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - go install github.com/mattn/goveralls@latest
+  - goveralls -coverprofile=coverage.out -service=travis-ci
