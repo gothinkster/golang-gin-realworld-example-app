@@ -125,7 +125,20 @@ depending on whether you want to see test coverage and how verbose the output yo
 
 ## Todo
 - More elegance config
-- Test coverage (common & users 100%, article 0%)
 - ProtoBuf support
 - Code structure optimize (I think some place can use interface)
 - Continuous integration (done)
+
+## Test Coverage
+
+Current test coverage (2026):
+- **Total**: 89.2%
+- **articles**: 92.1%
+- **users**: 99.5%
+- **common**: 85.7%
+
+Run coverage report:
+```bash
+go test -coverprofile=coverage.out ./...
+go tool cover -func=coverage.out
+```
