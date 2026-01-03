@@ -154,6 +154,13 @@ func FindOneArticle(condition interface{}) (ArticleModel, error) {
 	return model, err
 }
 
+func FindOneComment(condition interface{}) (CommentModel, error) {
+	db := common.GetDB()
+	var model CommentModel
+	err := db.Preload("Author.UserModel").Preload("Article").Where(condition).First(&model).Error
+	return model, err
+}
+
 func (self *ArticleModel) getComments() error {
 	db := common.GetDB()
 	err := db.Preload("Author.UserModel").Model(self).Association("Comments").Find(&self.Comments)

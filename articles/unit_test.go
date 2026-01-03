@@ -502,7 +502,7 @@ var articleRequestTests = []struct {
 		"/api/articles/updated-title/comments",
 		"POST",
 		`{"comment":{"body":"Test comment body"}}`,
-		http.StatusOK,
+		http.StatusCreated,
 		`"body":"Test comment body"`,
 		"create comment should succeed",
 	},
@@ -749,13 +749,13 @@ func TestCreateCommentRequiredFields(t *testing.T) {
 	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "Missing body should return 422")
 	asserts.Contains(w.Body.String(), "Body", "Error should mention Body field")
 
-	// Test valid comment creation - should return 200 per OpenAPI spec
+	// Test valid comment creation - should return 201 per OpenAPI spec
 	req, _ = http.NewRequest("POST", fmt.Sprintf("/api/articles/%s/comments", article.Slug), bytes.NewBufferString(`{"comment":{"body":"Test comment body"}}`))
 	req.Header.Set("Content-Type", "application/json")
 	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
-	asserts.Equal(http.StatusOK, w.Code, "Valid comment should return 200")
+	asserts.Equal(http.StatusCreated, w.Code, "Valid comment should return 201")
 	asserts.Contains(w.Body.String(), `"comment"`, "Response should contain comment")
 }
 
@@ -1477,6 +1477,117 @@ func TestArticleUpdateNonExistent(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	asserts.Equal(http.StatusNotFound, w.Code, "Update non-existent article should return 404")
+}
+
+func TestArticleDeleteAuthorizationForbidden(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := setupRouter()
+	user := createTestUser()
+	otherUser := createTestUser()
+
+	// Create article by user
+	articleUserModel := GetArticleUserModel(user)
+	slug := fmt.Sprintf("forbidden-delete-article-%d", common.RandInt())
+	article := ArticleModel{
+		Slug:        slug,
+		Title:       "Forbidden Delete Article",
+		Description: "Test Description",
+		Body:        "Test Body",
+		Author:      articleUserModel,
+		AuthorID:    articleUserModel.ID,
+	}
+	SaveOne(&article)
+
+	// Try to delete by otherUser
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/api/articles/%s", slug), nil)
+	common.HeaderTokenMock(req, otherUser.ID)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	asserts.Equal(http.StatusForbidden, w.Code, "Delete by non-author should return 403")
+
+	// Verify article still exists
+	foundArticle, err := FindOneArticle(&ArticleModel{Slug: slug})
+	asserts.NoError(err, "Article should still exist")
+	asserts.Equal(article.ID, foundArticle.ID, "Article ID should match")
+}
+
+func TestArticleUpdateAuthorizationForbidden(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := setupRouter()
+	user := createTestUser()
+	otherUser := createTestUser()
+
+	// Create article by user
+	articleUserModel := GetArticleUserModel(user)
+	slug := fmt.Sprintf("forbidden-update-article-%d", common.RandInt())
+	title := "Forbidden Update Article"
+	article := ArticleModel{
+		Slug:        slug,
+		Title:       title,
+		Description: "Test Description",
+		Body:        "Test Body",
+		Author:      articleUserModel,
+		AuthorID:    articleUserModel.ID,
+	}
+	SaveOne(&article)
+
+	// Try to update by otherUser
+	req, _ := http.NewRequest("PUT", fmt.Sprintf("/api/articles/%s", slug), bytes.NewBufferString(`{"article":{"title":"New Title"}}`))
+	req.Header.Set("Content-Type", "application/json")
+	common.HeaderTokenMock(req, otherUser.ID)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	asserts.Equal(http.StatusForbidden, w.Code, "Update by non-author should return 403")
+
+	// Verify article is unchanged
+	foundArticle, _ := FindOneArticle(&ArticleModel{Slug: slug})
+	asserts.Equal(title, foundArticle.Title, "Article title should be unchanged")
+}
+
+func TestCommentDeleteAuthorizationForbidden(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := setupRouter()
+	user := createTestUser()
+	otherUser := createTestUser()
+
+	// Create article
+	articleUserModel := GetArticleUserModel(user)
+	slug := fmt.Sprintf("forbidden-comment-delete-%d", common.RandInt())
+	article := ArticleModel{
+		Slug:        slug,
+		Title:       "Forbidden Comment Delete",
+		Description: "Test Description",
+		Body:        "Test Body",
+		Author:      articleUserModel,
+		AuthorID:    articleUserModel.ID,
+	}
+	SaveOne(&article)
+
+	// Create comment by user
+	comment := CommentModel{
+		ArticleID: article.ID,
+		AuthorID:  articleUserModel.ID,
+		Body:      "Test comment",
+	}
+	test_db.Create(&comment)
+
+	// Try to delete by otherUser
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/api/articles/%s/comments/%d", slug, comment.ID), nil)
+	common.HeaderTokenMock(req, otherUser.ID)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	asserts.Equal(http.StatusForbidden, w.Code, "Delete comment by non-author should return 403")
+
+	// Verify comment still exists
+	foundComment, err := FindOneComment(comment.ID)
+	asserts.NoError(err, "Comment should still exist")
+	asserts.Equal(comment.ID, foundComment.ID, "Comment ID should match")
 }
 
 // This is a hack way to add test database for each case

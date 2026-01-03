@@ -25,7 +25,7 @@ func (s *TagSerializer) Response() string {
 func (s *TagsSerializer) Response() []string {
 	response := []string{}
 	for _, tag := range s.Tags {
-		serializer := TagSerializer{s.C, tag}
+		serializer := TagSerializer{C: s.C, TagModel: tag}
 		response = append(response, serializer.Response())
 	}
 	return response
@@ -37,7 +37,7 @@ type ArticleUserSerializer struct {
 }
 
 func (s *ArticleUserSerializer) Response() users.ProfileResponse {
-	response := users.ProfileSerializer{s.C, s.ArticleUserModel.UserModel}
+	response := users.ProfileSerializer{C: s.C, UserModel: s.ArticleUserModel.UserModel}
 	return response.Response()
 }
 
@@ -67,7 +67,7 @@ type ArticlesSerializer struct {
 
 func (s *ArticleSerializer) Response() ArticleResponse {
 	myUserModel := s.C.MustGet("my_user_model").(users.UserModel)
-	authorSerializer := ArticleUserSerializer{s.C, s.Author}
+	authorSerializer := ArticleUserSerializer{C: s.C, ArticleUserModel: s.Author}
 	response := ArticleResponse{
 		ID:          s.ID,
 		Slug:        slug.Make(s.Title),
@@ -83,7 +83,7 @@ func (s *ArticleSerializer) Response() ArticleResponse {
 	}
 	response.Tags = make([]string, 0)
 	for _, tag := range s.Tags {
-		serializer := TagSerializer{s.C, tag}
+		serializer := TagSerializer{C: s.C, TagModel: tag}
 		response.Tags = append(response.Tags, serializer.Response())
 	}
 	sort.Strings(response.Tags)
@@ -92,7 +92,7 @@ func (s *ArticleSerializer) Response() ArticleResponse {
 
 // ResponseWithPreloaded creates response using preloaded favorite data to avoid N+1 queries
 func (s *ArticleSerializer) ResponseWithPreloaded(favorited bool, favoritesCount uint) ArticleResponse {
-	authorSerializer := ArticleUserSerializer{s.C, s.Author}
+	authorSerializer := ArticleUserSerializer{C: s.C, ArticleUserModel: s.Author}
 	response := ArticleResponse{
 		ID:             s.ID,
 		Slug:           slug.Make(s.Title),
@@ -107,7 +107,7 @@ func (s *ArticleSerializer) ResponseWithPreloaded(favorited bool, favoritesCount
 	}
 	response.Tags = make([]string, 0)
 	for _, tag := range s.Tags {
-		serializer := TagSerializer{s.C, tag}
+		serializer := TagSerializer{C: s.C, TagModel: tag}
 		response.Tags = append(response.Tags, serializer.Response())
 	}
 	sort.Strings(response.Tags)
@@ -133,7 +133,7 @@ func (s *ArticlesSerializer) Response() []ArticleResponse {
 	favoriteStatus := BatchGetFavoriteStatus(articleIDs, articleUserModel.ID)
 
 	for _, article := range s.Articles {
-		serializer := ArticleSerializer{s.C, article}
+		serializer := ArticleSerializer{C: s.C, ArticleModel: article}
 		favorited := favoriteStatus[article.ID]
 		count := favoriteCounts[article.ID]
 		response = append(response, serializer.ResponseWithPreloaded(favorited, count))
@@ -160,7 +160,7 @@ type CommentResponse struct {
 }
 
 func (s *CommentSerializer) Response() CommentResponse {
-	authorSerializer := ArticleUserSerializer{s.C, s.Author}
+	authorSerializer := ArticleUserSerializer{C: s.C, ArticleUserModel: s.Author}
 	response := CommentResponse{
 		ID:        s.ID,
 		Body:      s.Body,
@@ -174,7 +174,7 @@ func (s *CommentSerializer) Response() CommentResponse {
 func (s *CommentsSerializer) Response() []CommentResponse {
 	response := []CommentResponse{}
 	for _, comment := range s.Comments {
-		serializer := CommentSerializer{s.C, comment}
+		serializer := CommentSerializer{C: s.C, CommentModel: comment}
 		response = append(response, serializer.Response())
 	}
 	return response

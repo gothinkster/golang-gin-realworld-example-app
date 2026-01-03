@@ -102,6 +102,11 @@ func ArticleUpdate(c *gin.Context) {
 		c.JSON(http.StatusNotFound, common.NewError("articles", errors.New("Invalid slug")))
 		return
 	}
+	myUserModel := c.MustGet("my_user_model").(users.UserModel)
+	if articleModel.AuthorID != GetArticleUserModel(myUserModel).ID {
+		c.JSON(http.StatusForbidden, common.NewError("articles", errors.New("You are not the author of this article")))
+		return
+	}
 	articleModelValidator := NewArticleModelValidatorFillWith(articleModel)
 	if err := articleModelValidator.Bind(c); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, common.NewValidatorError(err))
@@ -119,7 +124,17 @@ func ArticleUpdate(c *gin.Context) {
 
 func ArticleDelete(c *gin.Context) {
 	slug := c.Param("slug")
-	err := DeleteArticleModel(&ArticleModel{Slug: slug})
+	articleModel, err := FindOneArticle(&ArticleModel{Slug: slug})
+	if err != nil {
+		c.Status(http.StatusOK)
+		return
+	}
+	myUserModel := c.MustGet("my_user_model").(users.UserModel)
+	if articleModel.AuthorID != GetArticleUserModel(myUserModel).ID {
+		c.JSON(http.StatusForbidden, common.NewError("articles", errors.New("You are not the author of this article")))
+		return
+	}
+	err = DeleteArticleModel(&ArticleModel{Slug: slug})
 	if err != nil {
 		c.JSON(http.StatusNotFound, common.NewError("articles", errors.New("Invalid slug")))
 		return
@@ -178,7 +193,7 @@ func ArticleCommentCreate(c *gin.Context) {
 		return
 	}
 	serializer := CommentSerializer{c, commentModelValidator.commentModel}
-	c.JSON(http.StatusOK, gin.H{"comment": serializer.Response()})
+	c.JSON(http.StatusCreated, gin.H{"comment": serializer.Response()})
 }
 
 func ArticleCommentDelete(c *gin.Context) {
@@ -186,6 +201,18 @@ func ArticleCommentDelete(c *gin.Context) {
 	id := uint(id64)
 	if err != nil {
 		c.JSON(http.StatusNotFound, common.NewError("comment", errors.New("Invalid id")))
+		return
+	}
+	condition := CommentModel{}
+	condition.ID = id
+	commentModel, err := FindOneComment(&condition)
+	if err != nil {
+		c.JSON(http.StatusNotFound, common.NewError("comment", errors.New("Invalid id")))
+		return
+	}
+	myUserModel := c.MustGet("my_user_model").(users.UserModel)
+	if commentModel.AuthorID != GetArticleUserModel(myUserModel).ID {
+		c.JSON(http.StatusForbidden, common.NewError("comment", errors.New("You are not the author of this comment")))
 		return
 	}
 	err = DeleteCommentModel([]uint{id})

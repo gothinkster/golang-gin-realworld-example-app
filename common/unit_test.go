@@ -20,19 +20,22 @@ func TestConnectingDatabase(t *testing.T) {
 	// Test create & close DB
 	_, err := os.Stat(dbPath)
 	asserts.NoError(err, "Db should exist")
-	sqlDB, _ := db.DB()
+	sqlDB, err := db.DB()
+	asserts.NoError(err, "Should get sql.DB")
 	asserts.NoError(sqlDB.Ping(), "Db should be able to ping")
 
 	// Test get a connecting from connection pools
 	connection := GetDB()
-	sqlDB, _ = connection.DB()
+	sqlDB, err = connection.DB()
+	asserts.NoError(err, "Should get sql.DB")
 	asserts.NoError(sqlDB.Ping(), "Db should be able to ping")
 	sqlDB.Close()
 
 	// Test DB exceptions
 	os.Chmod(dbPath, 0000)
 	db = Init()
-	sqlDB, _ = db.DB()
+	sqlDB, err = db.DB()
+	asserts.NoError(err, "Should get sql.DB")
 	asserts.Error(sqlDB.Ping(), "Db should not be able to ping")
 	sqlDB.Close()
 	os.Chmod(dbPath, 0644)
@@ -45,7 +48,8 @@ func TestConnectingTestDatabase(t *testing.T) {
 	testDBPath := GetTestDBPath()
 	_, err := os.Stat(testDBPath)
 	asserts.NoError(err, "Db should exist")
-	sqlDB, _ := db.DB()
+	sqlDB, err := db.DB()
+	asserts.NoError(err, "Should get sql.DB")
 	asserts.NoError(sqlDB.Ping(), "Db should be able to ping")
 	TestDBFree(db)
 
@@ -55,6 +59,31 @@ func TestConnectingTestDatabase(t *testing.T) {
 	_, err = os.Stat(testDBPath)
 
 	asserts.Error(err, "Db should not exist")
+}
+
+func TestDBDirCreation(t *testing.T) {
+	asserts := assert.New(t)
+	// Set a nested path
+	os.Setenv("TEST_DB_PATH", "tmp/nested/test.db")
+	defer os.Unsetenv("TEST_DB_PATH")
+
+	db := TestDBInit()
+	testDBPath := GetTestDBPath()
+	_, err := os.Stat(testDBPath)
+	asserts.NoError(err, "Db should exist in nested directory")
+	TestDBFree(db)
+
+	// Cleanup directory
+	os.RemoveAll("tmp/nested")
+}
+
+func TestDBPathOverride(t *testing.T) {
+	asserts := assert.New(t)
+	customPath := "./custom_test.db"
+	os.Setenv("TEST_DB_PATH", customPath)
+	defer os.Unsetenv("TEST_DB_PATH")
+
+	asserts.Equal(customPath, GetTestDBPath(), "Should use env var")
 }
 
 func TestRandString(t *testing.T) {
