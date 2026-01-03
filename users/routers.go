@@ -8,12 +8,15 @@ import (
 )
 
 func UsersRegister(router *gin.RouterGroup) {
+	router.POST("", UsersRegistration)
 	router.POST("/", UsersRegistration)
 	router.POST("/login", UsersLogin)
 }
 
 func UserRegister(router *gin.RouterGroup) {
+	router.GET("", UserRetrieve)
 	router.GET("/", UserRetrieve)
+	router.PUT("", UserUpdate)
 	router.PUT("/", UserUpdate)
 }
 

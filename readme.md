@@ -67,7 +67,22 @@ https://golang.org/doc/install
 
 ## Environment Config
 
-Set-up the standard Go environment variables according to latest guidance (see https://golang.org/doc/install#install).
+1. Copy the example environment file:
+```bash
+cp .env.example .env
+```
+
+2. Edit `.env` to configure your settings:
+```bash
+# Server Configuration
+PORT=8080                    # Server port (default: 8080)
+GIN_MODE=debug              # debug or release
+
+# Database Configuration
+DB_PATH=./data/gorm.db      # SQLite database path
+```
+
+3. Set up Go environment variables according to https://golang.org/doc/install#install
 
 
 ## Install Dependencies
@@ -76,6 +91,15 @@ From the project root, run:
 go build ./...
 go test ./...
 go mod tidy
+```
+
+## Run the Server
+```bash
+# Using default port 8080
+go run hello.go
+
+# Using custom port
+PORT=3000 go run hello.go
 ```
 
 ## Testing

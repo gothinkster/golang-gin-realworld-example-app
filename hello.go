@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 
@@ -33,6 +34,10 @@ func main() {
 
 	r := gin.Default()
 
+	// Disable automatic redirect for trailing slashes
+	// This prevents POST body from being lost during redirects
+	r.RedirectTrailingSlash = false
+
 	v1 := r.Group("/api")
 	users.UsersRegister(v1.Group("/users"))
 	v1.Use(users.AuthMiddleware(false))
@@ -54,5 +59,10 @@ func main() {
 		})
 	})
 
-	r.Run() // listen and serve on 0.0.0.0:8080
+	// Get port from environment variable or use default
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	r.Run(":" + port)
 }

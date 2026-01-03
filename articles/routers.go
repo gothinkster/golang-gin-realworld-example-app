@@ -11,6 +11,7 @@ import (
 
 func ArticlesRegister(router *gin.RouterGroup) {
 	router.GET("/feed", ArticleFeed)
+	router.POST("", ArticleCreate)
 	router.POST("/", ArticleCreate)
 	router.PUT("/:slug", ArticleUpdate)
 	router.DELETE("/:slug", ArticleDelete)
@@ -21,12 +22,14 @@ func ArticlesRegister(router *gin.RouterGroup) {
 }
 
 func ArticlesAnonymousRegister(router *gin.RouterGroup) {
+	router.GET("", ArticleList)
 	router.GET("/", ArticleList)
 	router.GET("/:slug", ArticleRetrieve)
 	router.GET("/:slug/comments", ArticleCommentList)
 }
 
 func TagsAnonymousRegister(router *gin.RouterGroup) {
+	router.GET("", TagList)
 	router.GET("/", TagList)
 }
 

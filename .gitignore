@@ -11,7 +11,6 @@
 *.launch
 .settings/
 
-
 #System Files
 .DS_Store
 Thumbs.db
@@ -20,12 +19,22 @@ vendor/*
 !vendor/vendor.json
 
 tmp/*
+
+# Database files
+*.db
+data/*.db
 gorm.db
 gorm_test.db
-*.db
+
+# Test output
 coverage.txt
 coverage.out
 profile.out
 results.sarif
+
+# Environment files (keep .env.example)
+.env
+.env.local
+.env.*.local
 
 bak.*
