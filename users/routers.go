@@ -17,8 +17,11 @@ func UserRegister(router *gin.RouterGroup) {
 	router.PUT("/", UserUpdate)
 }
 
-func ProfileRegister(router *gin.RouterGroup) {
+func ProfileRetrieveRegister(router *gin.RouterGroup) {
 	router.GET("/:username", ProfileRetrieve)
+}
+
+func ProfileRegister(router *gin.RouterGroup) {
 	router.POST("/:username/follow", ProfileFollow)
 	router.DELETE("/:username/follow", ProfileUnfollow)
 }
@@ -94,12 +97,12 @@ func UsersLogin(c *gin.Context) {
 	userModel, err := FindOneUser(&UserModel{Email: loginValidator.userModel.Email})
 
 	if err != nil {
-		c.JSON(http.StatusForbidden, common.NewError("login", errors.New("Not Registered email or invalid password")))
+		c.JSON(http.StatusUnauthorized, common.NewError("login", errors.New("Not Registered email or invalid password")))
 		return
 	}
 
 	if userModel.checkPassword(loginValidator.User.Password) != nil {
-		c.JSON(http.StatusForbidden, common.NewError("login", errors.New("Not Registered email or invalid password")))
+		c.JSON(http.StatusUnauthorized, common.NewError("login", errors.New("Not Registered email or invalid password")))
 		return
 	}
 	UpdateContextUserModel(c, userModel.ID)

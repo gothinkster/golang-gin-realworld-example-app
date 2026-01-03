@@ -181,7 +181,7 @@ var unauthRequestTests = []struct {
 		"/users/login",
 		"POST",
 		`{"user":{"email": "user112312312@linkedin.com","password": "password123"}}`,
-		http.StatusForbidden,
+		http.StatusUnauthorized,
 		`{"errors":{"login":"Not Registered email or invalid password"}}`,
 		"email not exist should return error info",
 	},
@@ -190,7 +190,7 @@ var unauthRequestTests = []struct {
 		"/users/login",
 		"POST",
 		`{"user":{"email": "user1@linkedin.com","password": "password126"}}`,
-		http.StatusForbidden,
+		http.StatusUnauthorized,
 		`{"errors":{"login":"Not Registered email or invalid password"}}`,
 		"password error should return error info",
 	},
@@ -459,6 +459,8 @@ func TestWithoutAuth(t *testing.T) {
 
 	r := gin.New()
 	UsersRegister(r.Group("/users"))
+	r.Use(AuthMiddleware(false))
+	ProfileRetrieveRegister(r.Group("/profiles"))
 	r.Use(AuthMiddleware(true))
 	UserRegister(r.Group("/user"))
 	ProfileRegister(r.Group("/profiles"))
