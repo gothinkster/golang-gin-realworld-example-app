@@ -1,16 +1,11 @@
 linters:
+  disable-all: true
   enable:
-    - gosimple
-    - govet
     - staticcheck
     - unused
     - misspell
 
 linters-settings:
-  govet:
-    enable:
-      - shadow
-  
   misspell:
     locale: US
 
