@@ -143,13 +143,13 @@ func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleMod
 	var models []ArticleModel
 	var count int
 
-	offset_int, err := strconv.Atoi(offset)
-	if err != nil {
+	offset_int, errOffset := strconv.Atoi(offset)
+	if errOffset != nil {
 		offset_int = 0
 	}
 
-	limit_int, err := strconv.Atoi(limit)
-	if err != nil {
+	limit_int, errLimit := strconv.Atoi(limit)
+	if errLimit != nil {
 		limit_int = 20
 	}
 
@@ -206,12 +206,12 @@ func (self *ArticleUserModel) GetArticleFeed(limit, offset string) ([]ArticleMod
 	var models []ArticleModel
 	var count int
 
-	offset_int, err := strconv.Atoi(offset)
-	if err != nil {
+	offset_int, errOffset := strconv.Atoi(offset)
+	if errOffset != nil {
 		offset_int = 0
 	}
-	limit_int, err := strconv.Atoi(limit)
-	if err != nil {
+	limit_int, errLimit := strconv.Atoi(limit)
+	if errLimit != nil {
 		limit_int = 20
 	}
 
