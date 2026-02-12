@@ -24,10 +24,10 @@ Here is the current status of the project implementation.
 
 ### Phase 1: Dockerization 🐳
 
-- [ ] Create a basic `Dockerfile` for the Go application.
-- [ ] Optimize image size using **Multi-stage builds** (Builder vs Runner).
-- [ ] Create `docker-compose.yaml` to run App + Database (PostgreSQL) locally.
-- [ ] Test application connectivity with the database in containers.
+- [x] Create a basic `Dockerfile` for the Go application.
+- [x] Optimize image size using **Multi-stage builds** (Builder vs Runner).
+- [x] Create `docker-compose.yaml` to run App + Database (PostgreSQL) locally.
+- [x] Test application connectivity with the database in containers.
 
 ### Phase 2: Kubernetes (K8s) ☸️
 
