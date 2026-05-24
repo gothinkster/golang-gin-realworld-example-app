@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -37,9 +38,22 @@ func RandInt() int {
 	return int(randNum.Int64())
 }
 
-// Keep this two config private, it should not expose to open source
-const JWTSecret = "A String Very Very Very Strong!!@##$!@#$"      // #nosec G101
-const RandomPassword = "A String Very Very Very Random!!@##$!@#4" // #nosec G101
+// GetJWTSecret returns the JWT signing key from environment variable.
+// If JWT_SECRET is not set, it prints a fatal error and exits.
+func GetJWTSecret() []byte {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		fmt.Fprintf(os.Stderr, "fatal: JWT_SECRET is not set. Generate one with: openssl rand -base64 32\n")
+		os.Exit(1)
+	}
+	return []byte(secret)
+}
+
+// GetRandomPassword returns a randomly-generated sentinel value.
+// It is regenerated on every startup so the sentinel cannot be predicted.
+func GetRandomPassword() string {
+	return RandString(64)
+}
 
 // A Util function to generate jwt_token which can be used in the request header
 func GenToken(id uint) string {
@@ -48,7 +62,7 @@ func GenToken(id uint) string {
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	})
 	// Sign and get the complete encoded token as a string
-	token, err := jwt_token.SignedString([]byte(JWTSecret))
+	token, err := jwt_token.SignedString(GetJWTSecret())
 	if err != nil {
 		fmt.Printf("failed to sign JWT token for id %d: %v\n", id, err)
 		return ""

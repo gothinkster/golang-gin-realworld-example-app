@@ -57,7 +57,7 @@ func AuthMiddleware(auto401 bool) gin.HandlerFunc {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
-			return []byte(common.JWTSecret), nil
+			return common.GetJWTSecret(), nil
 		})
 
 		if err != nil {
