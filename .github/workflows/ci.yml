@@ -99,34 +99,61 @@ jobs:
       with:
         sarif_file: results.sarif
 
-  api-test:
-    name: API Integration Test
+  hurl-api-test:
+    name: API Spec Test (Hurl)
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: read
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
         go-version: '1.23'
-        
+
+    - name: Install Hurl
+      run: |
+        curl -sSL -o hurl.tar.gz https://github.com/Orange-OpenSource/hurl/releases/download/8.0.1/hurl-8.0.1-x86_64-unknown-linux-gnu.tar.gz
+        echo "cac7c4670d69444db120edb21fe06c97ba8c80dcc52279957c8dd18f05fb0c06  hurl.tar.gz" | sha256sum -c -
+        tar xzf hurl.tar.gz
+        echo "$PWD/hurl-8.0.1-x86_64-unknown-linux-gnu/bin" >> "$GITHUB_PATH"
+
+    - name: Get dependencies
+      run: go mod download
+
+    - name: Run Hurl API spec tests
+      run: bash ./scripts/run-spec-tests.sh hurl
+
+  bruno-api-test:
+    name: API Spec Test (Bruno)
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
 
-    - name: Install Newman
-      run: npm install -g newman
+    - name: Install Bruno CLI
+      run: npm install -g @usebruno/cli
 
     - name: Get dependencies
-      run: |
-        go get -v -t -d ./...
-        go mod download
-    
-    - name: Run API Tests
-      run: bash ./scripts/run-api-tests.sh
+      run: go mod download
+
+    - name: Run Bruno API spec tests
+      run: bash ./scripts/run-spec-tests.sh bruno

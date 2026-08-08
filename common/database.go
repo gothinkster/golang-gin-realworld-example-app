@@ -54,7 +54,11 @@ func Init() *gorm.DB {
 		fmt.Println("db err: (Init - create dir) ", err)
 	}
 
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
+		// Map driver-specific errors (e.g. unique violations) onto gorm's
+		// portable sentinels like gorm.ErrDuplicatedKey.
+		TranslateError: true,
+	})
 	if err != nil {
 		fmt.Println("db err: (Init) ", err)
 	}
@@ -78,7 +82,8 @@ func TestDBInit() *gorm.DB {
 	}
 
 	test_db, err := gorm.Open(sqlite.Open(testDBPath), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger:         logger.Default.LogMode(logger.Info),
+		TranslateError: true,
 	})
 	if err != nil {
 		fmt.Println("db err: (TestDBInit) ", err)

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gothinkster/golang-gin-realworld-example-app/common"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
@@ -120,7 +121,7 @@ var unauthRequestTests = []struct {
 		"POST",
 		`{"user":{"username": "wangzitian0","email": "wzt@gg.cn","password": "jakejxke"}}`,
 		http.StatusCreated,
-		`{"user":{"username":"wangzitian0","email":"wzt@gg.cn","bio":"","image":"","token":"([a-zA-Z0-9-_.]{115})"}}`,
+		`{"user":{"username":"wangzitian0","email":"wzt@gg.cn","bio":null,"image":null,"token":"([a-zA-Z0-9-_.]{115})"}}`,
 		"valid data and should return StatusCreated",
 	},
 	{
@@ -128,9 +129,9 @@ var unauthRequestTests = []struct {
 		"/users/",
 		"POST",
 		`{"user":{"username": "wangzitian0","email": "wzt@gg.cn","password": "jakejxke"}}`,
-		http.StatusUnprocessableEntity,
-		`{"errors":{"database":"UNIQUE constraint failed: user_models.email"}}`,
-		"duplicated data and should return StatusUnprocessableEntity",
+		http.StatusConflict,
+		`{"errors":{"username":\["has already been taken"\]}}`,
+		"duplicated data and should return StatusConflict",
 	},
 	{
 		func(req *http.Request) {},
@@ -138,7 +139,7 @@ var unauthRequestTests = []struct {
 		"POST",
 		`{"user":{"username": "u","email": "wzt@gg.cn","password": "jakejxke"}}`,
 		http.StatusUnprocessableEntity,
-		`{"errors":{"Username":"{min: 4}"}}`,
+		`{"errors":{"username":\["is too short \(minimum is 4 characters\)"\]}}`,
 		"too short username should return error",
 	},
 	{
@@ -147,7 +148,7 @@ var unauthRequestTests = []struct {
 		"POST",
 		`{"user":{"username": "wangzitian0","email": "wzt@gg.cn","password": "j"}}`,
 		http.StatusUnprocessableEntity,
-		`{"errors":{"Password":"{min: 8}"}}`,
+		`{"errors":{"password":\["is too short \(minimum is 8 characters\)"\]}}`,
 		"too short password should return error",
 	},
 	{
@@ -156,7 +157,7 @@ var unauthRequestTests = []struct {
 		"POST",
 		`{"user":{"username": "wangzitian0","email": "wztgg.cn","password": "jakejxke"}}`,
 		http.StatusUnprocessableEntity,
-		`{"errors":{"Email":"{key: email}"}}`,
+		`{"errors":{"email":\["is invalid"\]}}`,
 		"email invalid should return error",
 	},
 
@@ -178,7 +179,7 @@ var unauthRequestTests = []struct {
 		"POST",
 		`{"user":{"email": "user112312312@linkedin.com","password": "password123"}}`,
 		http.StatusUnauthorized,
-		`{"errors":{"login":"Not Registered email or invalid password"}}`,
+		`{"errors":{"credentials":\["invalid"\]}}`,
 		"email not exist should return error info",
 	},
 	{
@@ -187,7 +188,7 @@ var unauthRequestTests = []struct {
 		"POST",
 		`{"user":{"email": "user1@linkedin.com","password": "password126"}}`,
 		http.StatusUnauthorized,
-		`{"errors":{"login":"Not Registered email or invalid password"}}`,
+		`{"errors":{"credentials":\["invalid"\]}}`,
 		"password error should return error info",
 	},
 	{
@@ -196,7 +197,7 @@ var unauthRequestTests = []struct {
 		"POST",
 		`{"user":{"email": "user1@linkedin.com","password": "passw"}}`,
 		http.StatusUnprocessableEntity,
-		`{"errors":{"Password":"{min: 8}"}}`,
+		`{"errors":{"password":\["is too short \(minimum is 8 characters\)"\]}}`,
 		"password too short should return error info",
 	},
 	{
@@ -205,7 +206,7 @@ var unauthRequestTests = []struct {
 		"POST",
 		`{"user":{"email": "user1@linkedin.com","password": "passw"}}`,
 		http.StatusUnprocessableEntity,
-		`{"errors":{"Password":"{min: 8}"}}`,
+		`{"errors":{"password":\["is too short \(minimum is 8 characters\)"\]}}`,
 		"password too short should return error info",
 	},
 
@@ -332,7 +333,7 @@ var unauthRequestTests = []struct {
 		"PUT",
 		`{"user":{"password": "pas"}}`,
 		http.StatusUnprocessableEntity,
-		`{"errors":{"Password":"{min: 8}"}}`,
+		`{"errors":{"password":\["is too short \(minimum is 8 characters\)"\]}}`,
 		"current user profile should not be changed with error user info",
 	},
 
@@ -344,10 +345,10 @@ var unauthRequestTests = []struct {
 		},
 		"/user/",
 		"PUT",
-		`{"password": "password321"}}`,
+		`{"user":{"username": null}}`,
 		http.StatusUnprocessableEntity,
-		`{"errors":{"Email":"{key: required}","Username":"{key: required}"}}`,
-		"test database pk error for user update",
+		`{"errors":{"username":\["can't be blank"\]}}`,
+		"null username should be rejected on user update",
 	},
 	{
 		func(req *http.Request) {
@@ -355,10 +356,10 @@ var unauthRequestTests = []struct {
 		},
 		"/user/",
 		"PUT",
-		`{"user":{"username": "wangzitian0","email": "wzt@gg.cn","password": "jakejxke"}}`,
+		`{"user":`,
 		http.StatusUnprocessableEntity,
-		`{"errors":{"database":"WHERE conditions required"}}`,
-		"cheat validator and test database connecting error for user update",
+		`{"errors":{"body":\["is invalid"\]}}`,
+		"malformed json body should be rejected on user update",
 	},
 	{
 		func(req *http.Request) {
@@ -373,7 +374,7 @@ var unauthRequestTests = []struct {
 		"POST",
 		``,
 		http.StatusUnprocessableEntity,
-		`{"errors":{"database":"no such table: follow_models"}}`,
+		`{"errors":{"database":\["no such table: follow_models"\]}}`,
 		"test database error for following",
 	},
 	{
@@ -384,7 +385,7 @@ var unauthRequestTests = []struct {
 		"DELETE",
 		``,
 		http.StatusUnprocessableEntity,
-		`{"errors":{"database":"no such table: follow_models"}}`,
+		`{"errors":{"database":\["no such table: follow_models"\]}}`,
 		"test database error for canceling following",
 	},
 	{
@@ -396,7 +397,7 @@ var unauthRequestTests = []struct {
 		"POST",
 		``,
 		http.StatusNotFound,
-		`{"errors":{"profile":"Invalid username"}}`,
+		`{"errors":{"profile":\["not found"\]}}`,
 		"following wrong user name should return errors",
 	},
 	{
@@ -407,7 +408,7 @@ var unauthRequestTests = []struct {
 		"DELETE",
 		``,
 		http.StatusNotFound,
-		`{"errors":{"profile":"Invalid username"}}`,
+		`{"errors":{"profile":\["not found"\]}}`,
 		"cancel following wrong user name should return errors",
 	},
 
@@ -551,4 +552,254 @@ func TestMain(m *testing.M) {
 	exitVal := m.Run()
 	common.TestDBFree(test_db)
 	os.Exit(exitVal)
+}
+
+// Covers the raw-JSON tri-state semantics of UserUpdate: omitted fields are
+// preserved, explicit null clears nullable fields and is rejected for
+// required ones, and password rules follow NIST 800-63B.
+func TestUserUpdateNullAndBlankSemantics(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := gin.New()
+	r.Use(AuthMiddleware(true))
+	UserRegister(r.Group("/user"))
+	resetDBWithMock()
+
+	doPut := func(body string) *httptest.ResponseRecorder {
+		req, _ := http.NewRequest("PUT", "/user", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		common.HeaderTokenMock(req, 1)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		return w
+	}
+
+	w := doPut(`{"user":{"email":null}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "null email should be rejected")
+	asserts.Contains(w.Body.String(), `"email":["can't be blank"]`)
+
+	w = doPut(`{"user":{"username":null}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "null username should be rejected")
+	asserts.Contains(w.Body.String(), `"username":["can't be blank"]`)
+
+	w = doPut(`{"user":{"email":"not-an-email"}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "malformed email should be rejected")
+	asserts.Contains(w.Body.String(), `"email":["is invalid"]`)
+
+	w = doPut(`{"user":{"password":""}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "blank password should be rejected")
+	asserts.Contains(w.Body.String(), `"password":["can't be blank"]`)
+
+	w = doPut(`{"user":{"password":"short7c"}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "7-char password should be rejected")
+	asserts.Contains(w.Body.String(), "is too short")
+
+	longPassword := string(bytes.Repeat([]byte("a"), 256))
+	w = doPut(fmt.Sprintf(`{"user":{"password":"%s"}}`, longPassword))
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "256-char password should be rejected")
+	asserts.Contains(w.Body.String(), "is too long")
+
+	w = doPut(`{"user":{"bio":123}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "non-string bio should be rejected")
+	asserts.Contains(w.Body.String(), `"bio":["is invalid"]`)
+
+	w = doPut(`{"user":{"image":[1]}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "non-string image should be rejected")
+	asserts.Contains(w.Body.String(), `"image":["is invalid"]`)
+
+	w = doPut(`{"user":{"username":123}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "non-string username should be rejected")
+	asserts.Contains(w.Body.String(), `"username":["is invalid"]`)
+
+	// A wrong-typed field is reported as invalid alongside other field errors
+	w = doPut(`{"user":{"email":null,"bio":123}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "null email with invalid bio should be rejected")
+	asserts.Contains(w.Body.String(), `"email":["can't be blank"]`)
+	asserts.Contains(w.Body.String(), `"bio":["is invalid"]`)
+
+	w = doPut(`{"user":`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "malformed JSON should be rejected")
+	asserts.Contains(w.Body.String(), `"body":["is invalid"]`)
+
+	// Nullable fields: explicit null and empty string both clear to null
+	w = doPut(`{"user":{"bio":null,"image":""}}`)
+	asserts.Equal(http.StatusOK, w.Code, "clearing bio and image should succeed")
+	asserts.Contains(w.Body.String(), `"bio":null`)
+	asserts.Contains(w.Body.String(), `"image":null`)
+
+	// Omitted fields are preserved
+	w = doPut(`{"user":{"bio":"kept bio"}}`)
+	asserts.Equal(http.StatusOK, w.Code, "partial update should succeed")
+	asserts.Contains(w.Body.String(), `"username":"user1"`)
+	asserts.Contains(w.Body.String(), `"bio":"kept bio"`)
+
+	// Valid password change is accepted (64 chars per NIST must be accepted)
+	okPassword := string(bytes.Repeat([]byte("a"), 64))
+	w = doPut(fmt.Sprintf(`{"user":{"password":"%s"}}`, okPassword))
+	asserts.Equal(http.StatusOK, w.Code, "64-char password should be accepted")
+}
+
+// Covers the 409 duplicate-email branch of UsersRegistration (the duplicate
+// username branch is exercised by the table-driven tests above).
+func TestUsersRegistrationDuplicateEmail(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := gin.New()
+	UsersRegister(r.Group("/users"))
+	resetDBWithMock()
+
+	req, _ := http.NewRequest("POST", "/users", bytes.NewBufferString(
+		`{"user":{"username":"freshuser","email":"user1@linkedin.com","password":"password123"}}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	asserts.Equal(http.StatusConflict, w.Code, "duplicate email should return 409")
+	asserts.Contains(w.Body.String(), `"email":["has already been taken"]`)
+}
+
+func TestUsersRegistrationWithImage(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := gin.New()
+	UsersRegister(r.Group("/users"))
+	resetDBWithMock()
+
+	req, _ := http.NewRequest("POST", "/users", bytes.NewBufferString(
+		`{"user":{"username":"imageuser","email":"imageuser@example.com","password":"password123","image":"http://image/profile.jpg"}}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	asserts.Equal(http.StatusCreated, w.Code, "registration with an image should succeed")
+	userModel, err := FindOneUser(&UserModel{Username: "imageuser"})
+	asserts.NoError(err)
+	asserts.NotNil(userModel.Image)
+	asserts.Equal("http://image/profile.jpg", *userModel.Image)
+}
+
+func TestUsersRegistrationOverlongPasswordRejected(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := gin.New()
+	UsersRegister(r.Group("/users"))
+	resetDBWithMock()
+
+	// bcrypt rejects passwords longer than 72 bytes; the error must surface
+	// as a 422 instead of silently storing an unusable hash.
+	password := string(bytes.Repeat([]byte("a"), 100))
+	req, _ := http.NewRequest("POST", "/users", bytes.NewBufferString(fmt.Sprintf(
+		`{"user":{"username":"longpwuser","email":"longpw@example.com","password":"%s"}}`, password)))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "over-72-byte password should be rejected")
+	asserts.Contains(w.Body.String(), `"body":["is invalid"]`)
+	_, err := FindOneUser(&UserModel{Username: "longpwuser"})
+	asserts.Error(err, "no user should be created")
+}
+
+func TestUserUpdateWrongTypedIdentityFields(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := gin.New()
+	r.Use(AuthMiddleware(true))
+	UserRegister(r.Group("/user"))
+	resetDBWithMock()
+
+	doPut := func(body string) *httptest.ResponseRecorder {
+		req, _ := http.NewRequest("PUT", "/user", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		common.HeaderTokenMock(req, 1)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		return w
+	}
+
+	w := doPut(`{"user":{"email":123}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "non-string email should be rejected")
+	asserts.Contains(w.Body.String(), `"email":["is invalid"]`)
+
+	w = doPut(`{"user":{"password":123}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "non-string password should be rejected")
+	asserts.Contains(w.Body.String(), `"password":["is invalid"]`)
+}
+
+func TestUserUpdateOverlongPasswordRejected(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := gin.New()
+	r.Use(AuthMiddleware(true))
+	UserRegister(r.Group("/user"))
+	resetDBWithMock()
+
+	// Long enough for the binding tags (max=255) but over bcrypt's 72-byte cap
+	password := string(bytes.Repeat([]byte("a"), 100))
+	req, _ := http.NewRequest("PUT", "/user", bytes.NewBufferString(fmt.Sprintf(
+		`{"user":{"password":"%s"}}`, password)))
+	req.Header.Set("Content-Type", "application/json")
+	common.HeaderTokenMock(req, 1)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "over-72-byte password should be rejected")
+	asserts.Contains(w.Body.String(), `"password"`)
+}
+
+func TestAuthMiddlewareRejectsNonHMACToken(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := gin.New()
+	r.Use(AuthMiddleware(true))
+	UserRegister(r.Group("/user"))
+	resetDBWithMock()
+
+	// An unsigned ("none" algorithm) token must not pass the HMAC check
+	token := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{"id": 1})
+	tokenString, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
+	asserts.NoError(err)
+
+	req, _ := http.NewRequest("GET", "/user", nil)
+	req.Header.Set("Authorization", "Token "+tokenString)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	asserts.Equal(http.StatusUnauthorized, w.Code, "non-HMAC token should be rejected")
+}
+
+// Simulates the registration race deterministically: a one-shot gorm callback
+// plays the concurrent request by inserting a conflicting email right before
+// the handler's own INSERT runs, after the pre-checks have already passed.
+func TestUsersRegistrationEmailRaceConflict(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := gin.New()
+	UsersRegister(r.Group("/users"))
+	resetDBWithMock()
+
+	db := common.GetDB()
+	raced := false
+	err := db.Callback().Create().Before("gorm:create").Register("test:email_race", func(tx *gorm.DB) {
+		if raced {
+			return
+		}
+		if _, ok := tx.Statement.Dest.(*UserModel); !ok {
+			return
+		}
+		raced = true
+		tx.Session(&gorm.Session{NewDB: true}).Exec("INSERT INTO user_models (username, email, bio, password) VALUES (?, ?, ?, ?)",
+			"racewinner", "raced@example.com", "", "hash")
+	})
+	asserts.NoError(err)
+	defer db.Callback().Create().Remove("test:email_race")
+
+	req, _ := http.NewRequest("POST", "/users", bytes.NewBufferString(
+		`{"user":{"username":"raceloser","email":"raced@example.com","password":"password123"}}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	asserts.True(raced, "the simulated concurrent insert should have run")
+	asserts.Equal(http.StatusConflict, w.Code, "losing the insert race should return 409")
+	asserts.Contains(w.Body.String(), `"email":["has already been taken"]`)
 }

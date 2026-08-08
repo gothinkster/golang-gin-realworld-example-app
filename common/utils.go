@@ -3,8 +3,10 @@ package common
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"math/big"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -37,9 +39,8 @@ func RandInt() int {
 	return int(randNum.Int64())
 }
 
-// Keep this two config private, it should not expose to open source
-const JWTSecret = "A String Very Very Very Strong!!@##$!@#$"      // #nosec G101
-const RandomPassword = "A String Very Very Very Random!!@##$!@#4" // #nosec G101
+// Keep this config private, it should not expose to open source
+const JWTSecret = "A String Very Very Very Strong!!@##$!@#$" // #nosec G101
 
 // A Util function to generate jwt_token which can be used in the request header
 func GenToken(id uint) string {
@@ -57,36 +58,77 @@ func GenToken(id uint) string {
 }
 
 // My own Error type that will help return my customized Error info
+// following the RealWorld spec format:
 //
-//	{"database": {"hello":"no such table", error: "not_exists"}}
+//	{"errors": {"email": ["can't be blank"]}}
 type CommonError struct {
-	Errors map[string]interface{} `json:"errors"`
+	Errors map[string][]string `json:"errors"`
+}
+
+// Maps Go struct field names to their JSON counterparts for error responses.
+var errorFieldNames = map[string]string{
+	"Tags":    "tagList",
+	"TagList": "tagList",
+}
+
+func errorFieldName(field string) string {
+	if name, ok := errorFieldNames[field]; ok {
+		return name
+	}
+	return strings.ToLower(field)
+}
+
+func errorMessageForTag(v validator.FieldError) string {
+	switch v.Tag() {
+	case "required":
+		return "can't be blank"
+	case "notnull":
+		return "can't be null"
+	case "min":
+		return fmt.Sprintf("is too short (minimum is %v characters)", v.Param())
+	case "max":
+		return fmt.Sprintf("is too long (maximum is %v characters)", v.Param())
+	default:
+		return "is invalid"
+	}
 }
 
 // To handle the error returned by c.Bind in gin framework
 // https://github.com/go-playground/validator/blob/v9/_examples/translations/main.go
 func NewValidatorError(err error) CommonError {
 	res := CommonError{}
-	res.Errors = make(map[string]interface{})
-	errs := err.(validator.ValidationErrors)
+	res.Errors = make(map[string][]string)
+	var errs validator.ValidationErrors
+	if !errors.As(err, &errs) {
+		res.Errors["body"] = []string{"is invalid"}
+		return res
+	}
 	for _, v := range errs {
-		// can translate each error one at a time.
-		//fmt.Println("gg",v.NameNamespace)
-		if v.Param() != "" {
-			res.Errors[v.Field()] = fmt.Sprintf("{%v: %v}", v.Tag(), v.Param())
-		} else {
-			res.Errors[v.Field()] = fmt.Sprintf("{key: %v}", v.Tag())
-		}
-
+		field := errorFieldName(v.Field())
+		res.Errors[field] = append(res.Errors[field], errorMessageForTag(v))
 	}
 	return res
 }
 
+// MarkInvalidFields overrides the messages of the given fields with
+// "is invalid". Wrong-JSON-type values on Nullable fields are collapsed to
+// blank/null by the valuer, so without this the binding tags would report
+// them as "can't be blank" / "can't be null".
+func (e CommonError) MarkInvalidFields(fields []string) {
+	for _, field := range fields {
+		e.Errors[field] = []string{"is invalid"}
+	}
+}
+
 // Wrap the error info in an object
 func NewError(key string, err error) CommonError {
+	return NewErrorMessage(key, err.Error())
+}
+
+// Wrap a plain error message in the RealWorld errors format
+func NewErrorMessage(key string, message string) CommonError {
 	res := CommonError{}
-	res.Errors = make(map[string]interface{})
-	res.Errors[key] = err.Error()
+	res.Errors = map[string][]string{key: {message}}
 	return res
 }
 

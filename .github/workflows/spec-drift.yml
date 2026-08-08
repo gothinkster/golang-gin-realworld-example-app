@@ -1,0 +1,43 @@
+name: Spec Drift
+
+# Weekly canary: runs the RealWorld API spec suite against the latest upstream
+# main instead of the pinned commit. A failure here means the spec moved and
+# the pin in scripts/run-spec-tests.sh needs a bump
+# (possibly with code changes). It never blocks PRs.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  hurl-upstream-main:
+    name: Hurl vs upstream main
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+
+    - name: Install Hurl
+      run: |
+        curl -sSL -o hurl.tar.gz https://github.com/Orange-OpenSource/hurl/releases/download/8.0.1/hurl-8.0.1-x86_64-unknown-linux-gnu.tar.gz
+        echo "cac7c4670d69444db120edb21fe06c97ba8c80dcc52279957c8dd18f05fb0c06  hurl.tar.gz" | sha256sum -c -
+        tar xzf hurl.tar.gz
+        echo "$PWD/hurl-8.0.1-x86_64-unknown-linux-gnu/bin" >> "$GITHUB_PATH"
+
+    - name: Get dependencies
+      run: go mod download
+
+    - name: Run Hurl API spec tests against upstream main
+      env:
+        SPECS_REF: main
+      run: bash ./scripts/run-spec-tests.sh hurl

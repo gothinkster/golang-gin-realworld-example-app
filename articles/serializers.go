@@ -89,15 +89,29 @@ func (s *ArticleSerializer) Response() ArticleResponse {
 	return response
 }
 
+// ArticleListResponse is the article shape used in list endpoints.
+// Per the RealWorld spec, list responses must not include the body field.
+type ArticleListResponse struct {
+	ID             uint                  `json:"-"`
+	Title          string                `json:"title"`
+	Slug           string                `json:"slug"`
+	Description    string                `json:"description"`
+	CreatedAt      string                `json:"createdAt"`
+	UpdatedAt      string                `json:"updatedAt"`
+	Author         users.ProfileResponse `json:"author"`
+	Tags           []string              `json:"tagList"`
+	Favorite       bool                  `json:"favorited"`
+	FavoritesCount uint                  `json:"favoritesCount"`
+}
+
 // ResponseWithPreloaded creates response using preloaded favorite data to avoid N+1 queries
-func (s *ArticleSerializer) ResponseWithPreloaded(favorited bool, favoritesCount uint) ArticleResponse {
+func (s *ArticleSerializer) ResponseWithPreloaded(favorited bool, favoritesCount uint) ArticleListResponse {
 	authorSerializer := ArticleUserSerializer{C: s.C, ArticleUserModel: s.Author}
-	response := ArticleResponse{
+	response := ArticleListResponse{
 		ID:             s.ID,
 		Slug:           s.Slug,
 		Title:          s.Title,
 		Description:    s.Description,
-		Body:           s.Body,
 		CreatedAt:      s.CreatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
 		UpdatedAt:      s.UpdatedAt.UTC().Format("2006-01-02T15:04:05.999Z"),
 		Author:         authorSerializer.Response(),
@@ -113,8 +127,8 @@ func (s *ArticleSerializer) ResponseWithPreloaded(favorited bool, favoritesCount
 	return response
 }
 
-func (s *ArticlesSerializer) Response() []ArticleResponse {
-	response := []ArticleResponse{}
+func (s *ArticlesSerializer) Response() []ArticleListResponse {
+	response := []ArticleListResponse{}
 	if len(s.Articles) == 0 {
 		return response
 	}

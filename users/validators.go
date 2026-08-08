@@ -20,9 +20,7 @@ type UserModelValidator struct {
 	userModel UserModel `json:"-"`
 }
 
-// There are some difference when you create or update a model, you need to fill the DataModel before
-// update so that you can use your origin data to cheat the validator.
-// BTW, you can put your general binding logic here such as setting password.
+// You can put your general binding logic here such as setting password.
 func (self *UserModelValidator) Bind(c *gin.Context) error {
 	err := common.Bind(c, self)
 	if err != nil {
@@ -31,9 +29,8 @@ func (self *UserModelValidator) Bind(c *gin.Context) error {
 	self.userModel.Username = self.User.Username
 	self.userModel.Email = self.User.Email
 	self.userModel.Bio = self.User.Bio
-
-	if self.User.Password != common.RandomPassword {
-		self.userModel.setPassword(self.User.Password)
+	if err := self.userModel.setPassword(self.User.Password); err != nil {
+		return err
 	}
 	if self.User.Image != "" {
 		self.userModel.Image = &self.User.Image
@@ -47,17 +44,51 @@ func NewUserModelValidator() UserModelValidator {
 	return userModelValidator
 }
 
-func NewUserModelValidatorFillWith(userModel UserModel) UserModelValidator {
-	userModelValidator := NewUserModelValidator()
-	userModelValidator.User.Username = userModel.Username
-	userModelValidator.User.Email = userModel.Email
-	userModelValidator.User.Bio = userModel.Bio
-	userModelValidator.User.Password = common.RandomPassword
+// UserUpdateValidator is the schema for PUT /api/user. Nullable fields give
+// tri-state semantics (absent / null / value); the binding tags apply to the
+// inner value via the valuer registered in common: "omitnil" skips absent
+// fields, null and "" fail "required" on identity fields, and null on the
+// tag-free bio/image fields is accepted (it clears them).
+type UserUpdateValidator struct {
+	User struct {
+		Username common.Nullable[string] `json:"username" binding:"omitnil,required,min=4,max=255"`
+		Email    common.Nullable[string] `json:"email" binding:"omitnil,required,email"`
+		Password common.Nullable[string] `json:"password" binding:"omitnil,required,min=8,max=255"`
+		Bio      common.Nullable[string] `json:"bio" binding:"omitnil"`
+		Image    common.Nullable[string] `json:"image" binding:"omitnil"`
+	} `json:"user"`
+}
 
-	if userModel.Image != nil {
-		userModelValidator.User.Image = *userModel.Image
+func NewUserUpdateValidator() UserUpdateValidator {
+	return UserUpdateValidator{}
+}
+
+func (self *UserUpdateValidator) Bind(c *gin.Context) error {
+	return common.Bind(c, self)
+}
+
+// invalidFields lists request fields whose JSON value had the wrong type.
+// The binding tags cannot see this case: the valuer collapses it to the zero
+// value, which reads as blank (identity fields) or is accepted outright
+// (tag-free bio/image).
+func (self *UserUpdateValidator) invalidFields() []string {
+	fields := []string{}
+	if self.User.Username.IsInvalid() {
+		fields = append(fields, "username")
 	}
-	return userModelValidator
+	if self.User.Email.IsInvalid() {
+		fields = append(fields, "email")
+	}
+	if self.User.Password.IsInvalid() {
+		fields = append(fields, "password")
+	}
+	if self.User.Bio.IsInvalid() {
+		fields = append(fields, "bio")
+	}
+	if self.User.Image.IsInvalid() {
+		fields = append(fields, "image")
+	}
+	return fields
 }
 
 type LoginValidator struct {

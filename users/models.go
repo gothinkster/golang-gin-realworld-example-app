@@ -60,7 +60,10 @@ func (u *UserModel) setPassword(password string) error {
 	}
 	bytePassword := []byte(password)
 	// Make sure the second param `bcrypt generator cost` between [4, 32)
-	passwordHash, _ := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
+	passwordHash, err := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
 	u.PasswordHash = string(passwordHash)
 	return nil
 }
@@ -90,15 +93,6 @@ func FindOneUser(condition interface{}) (UserModel, error) {
 func SaveOne(data interface{}) error {
 	db := common.GetDB()
 	err := db.Save(data).Error
-	return err
-}
-
-// You could update properties of an UserModel to database returning with error info.
-//
-//	err := db.Model(userModel).Updates(UserModel{Username: "wangzitian0"}).Error
-func (model *UserModel) Update(data interface{}) error {
-	db := common.GetDB()
-	err := db.Model(model).Updates(data).Error
 	return err
 }
 
