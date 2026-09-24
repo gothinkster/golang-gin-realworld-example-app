@@ -8,7 +8,8 @@ This is a **Golang/Gin** implementation of the [RealWorld](https://github.com/go
 
 ## Technology Stack
 
-- **Go**: 1.21+ required
+- **Go**: 1.25+ required
+- **Observability**: OpenTelemetry compile-time instrumentation (`go tool otelc go build`); see the readme
 - **Web Framework**: [Gin](https://github.com/gin-gonic/gin) v1.10+
 - **ORM**: [GORM v2](https://gorm.io/) (gorm.io/gorm)
 - **Database**: SQLite (for development/testing)
@@ -62,7 +63,7 @@ go fmt ./...
 golangci-lint run
 
 # Start the server
-go run hello.go
+go run .
 ```
 
 ## Code Style Guidelines

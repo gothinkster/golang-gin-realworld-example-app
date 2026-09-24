@@ -14,7 +14,7 @@ This codebase was created to demonstrate a fully fledged fullstack application b
 ## Recent Updates
 
 This project has been modernized with the following updates:
-- **Go 1.21+**: Updated from Go 1.15 to require Go 1.21 or higher
+- **Go 1.25+**: Required by OpenTelemetry compile-time instrumentation
 - **GORM v2**: Migrated from deprecated jinzhu/gorm v1 to gorm.io/gorm v2
 - **JWT v5**: Updated from deprecated dgrijalva/jwt-go to golang-jwt/jwt/v5 (fixes CVE-2020-26160)
 - **Validator v10**: Updated validator tags and package to match gin v1.10.0
@@ -78,7 +78,7 @@ go tool cover -func=coverage.out
 
 ## Install Golang
 
-Make sure you have Go 1.21 or higher installed.
+Make sure you have Go 1.25 or higher installed.
 
 https://golang.org/doc/install
 
@@ -99,10 +99,10 @@ Example usage:
 # Option 1: Set environment variables directly
 export PORT=3000
 export DB_PATH=./data/myapp.db
-go run hello.go
+go run .
 
 # Option 2: Inline with command
-PORT=3000 go run hello.go
+PORT=3000 go run .
 ```
 
 See `.env.example` for a complete template.
@@ -119,11 +119,37 @@ go mod tidy
 ## Run the Server
 ```bash
 # Using default port 8080
-go run hello.go
+go run .
 
 # Using custom port
-PORT=3000 go run hello.go
+PORT=3000 go run .
 ```
+
+## Observability
+
+The server can be built with [OpenTelemetry Go compile-time instrumentation](https://github.com/open-telemetry/opentelemetry-go-compile-instrumentation) (`otelc`), pinned as a Go tool dependency in `go.mod`. `otelc` injects the OpenTelemetry SDK and instrumentation at build time, producing:
+
+- Traces for incoming HTTP requests (named after the Gin route), with a child span for every SQL query GORM runs
+- Go runtime metrics
+- `trace_id`/`span_id` added to log lines written during a request
+
+A plain `go build` produces an uninstrumented binary.
+
+```bash
+# Build the instrumented binary
+go tool otelc go build -o bin/realworld .
+
+# Start a local OpenTelemetry backend (Grafana, Tempo, Prometheus, Loki)
+docker run -d --name lgtm -p 3000:3000 -p 4317:4317 -p 4318:4318 grafana/otel-lgtm
+
+# Run the server, exporting telemetry over OTLP
+OTEL_SERVICE_NAME=realworld \
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 \
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf \
+./bin/realworld
+```
+
+Open Grafana at http://localhost:3000 (admin/admin) and use Explore with the Tempo data source to view traces. The instrumented binary reads the standard [OpenTelemetry SDK environment variables](https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/).
 
 ## Testing
 From the project root, run:

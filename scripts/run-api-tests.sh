@@ -13,7 +13,7 @@ curl -L -s https://raw.githubusercontent.com/gothinkster/realworld/main/api/Cond
 
 # Build the application
 echo "Building application..."
-go build -o app hello.go
+go build -o app .
 
 # Start the server
 echo "Starting server..."

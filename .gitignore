@@ -39,3 +39,7 @@ results.sarif
 
 bak.*
 tmp/
+
+# Build output and otelc compile-time instrumentation workspace
+/bin/
+.otelc-build/

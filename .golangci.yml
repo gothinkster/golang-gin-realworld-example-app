@@ -1,19 +1,23 @@
+version: "2"
 linters:
-  disable-all: true
+  default: none
   enable:
+    - misspell
     - staticcheck
     - unused
-    - misspell
-
-linters-settings:
-  misspell:
-    locale: US
-
+  settings:
+    staticcheck:
+      checks:
+        - SA*
+    misspell:
+      locale: US
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
 issues:
-  exclude-use-default: true
   max-issues-per-linter: 50
   max-same-issues: 10
-  
-run:
-  timeout: 5m
-  go: '1.22'

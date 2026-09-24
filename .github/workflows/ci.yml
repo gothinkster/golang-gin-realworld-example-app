@@ -17,7 +17,7 @@ jobs:
     
     strategy:
       matrix:
-        go-version: ['1.21', '1.22', '1.23']
+        go-version: ['1.25', '1.26']
     
     steps:
     - name: Checkout code
@@ -41,7 +41,7 @@ jobs:
       run: bash ./scripts/coverage.sh
     
     - name: Upload coverage to Coveralls
-      if: matrix.go-version == '1.23'
+      if: matrix.go-version == '1.26'
       uses: coverallsapp/github-action@v2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -63,12 +63,12 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.23'
+        go-version: '1.26'
     
     - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v4
+      uses: golangci/golangci-lint-action@v9
       with:
-        version: v1.61
+        version: v2.14
         args: --timeout=5m
 
   security:
@@ -86,10 +86,10 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.23'
+        go-version: '1.26'
     
     - name: Run Gosec Security Scanner
-      uses: securego/gosec@v2.21.4
+      uses: securego/gosec@v2.29.0
       with:
         args: '-no-fail -fmt sarif -out results.sarif ./...'
     
@@ -113,7 +113,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.23'
+        go-version: '1.26'
         
     - name: Set up Node.js
       uses: actions/setup-node@v4
