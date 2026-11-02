@@ -22,8 +22,8 @@ BRUNO_SANDBOX="${BRUNO_SANDBOX:-safe}"
 # its source tarball. Bump both together when adopting a newer spec.
 # Override SPECS_REF (branch, tag or commit) to test another version; checksum
 # verification is skipped unless a matching SPECS_SHA256 is provided.
-SPECS_REF_DEFAULT="98f29fb3f8bcb1dd614b91f2851371bf22c34775"
-SPECS_SHA256_DEFAULT="faf81a1eb15fea34705d111e2711d181a505d08f3a92fd321b14b6965d4c5260"
+SPECS_REF_DEFAULT="25588846c314b15a5e427ffe816e6b4af7be68c7"
+SPECS_SHA256_DEFAULT="110a70e92d5a5f6e8e4412b96ff60f594af4f2ddcbb05cc4b4eee646ab0c1047"
 SPECS_REF="${SPECS_REF:-$SPECS_REF_DEFAULT}"
 if [ -z "${SPECS_SHA256+x}" ]; then
     if [ "$SPECS_REF" = "$SPECS_REF_DEFAULT" ]; then

@@ -160,6 +160,15 @@ var unauthRequestTests = []struct {
 		`{"errors":{"email":\["is invalid"\]}}`,
 		"email invalid should return error",
 	},
+	{
+		func(req *http.Request) {},
+		"/users/",
+		"POST",
+		`{"user":{"username": "wangzitian0","email": "","password": "jakejxke"}}`,
+		http.StatusUnprocessableEntity,
+		`{"errors":{"email":\["can't be blank"\]}}`,
+		"blank email should return can't be blank, not is invalid",
+	},
 
 	//---------------------   Testing for user login   ---------------------
 	{
@@ -208,6 +217,24 @@ var unauthRequestTests = []struct {
 		http.StatusUnprocessableEntity,
 		`{"errors":{"password":\["is too short \(minimum is 8 characters\)"\]}}`,
 		"password too short should return error info",
+	},
+	{
+		func(req *http.Request) {},
+		"/users/login",
+		"POST",
+		`{"user":{"email": "","password": "password123"}}`,
+		http.StatusUnprocessableEntity,
+		`{"errors":{"email":\["can't be blank"\]}}`,
+		"blank email login should return can't be blank, not is invalid",
+	},
+	{
+		func(req *http.Request) {},
+		"/users/login",
+		"POST",
+		`{"user":{"email": "user1@","password": "password123"}}`,
+		http.StatusUnprocessableEntity,
+		`{"errors":{"email":\["is invalid"\]}}`,
+		"malformed email login should return error info",
 	},
 
 	//---------------------   Testing for self info get & auth module  ---------------------
@@ -585,6 +612,14 @@ func TestUserUpdateNullAndBlankSemantics(t *testing.T) {
 	w = doPut(`{"user":{"email":"not-an-email"}}`)
 	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "malformed email should be rejected")
 	asserts.Contains(w.Body.String(), `"email":["is invalid"]`)
+
+	w = doPut(`{"user":{"email":"user1@"}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "email without domain should be rejected")
+	asserts.Contains(w.Body.String(), `"email":["is invalid"]`)
+
+	w = doPut(`{"user":{"email":""}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "blank email should be rejected")
+	asserts.Contains(w.Body.String(), `"email":["can't be blank"]`)
 
 	w = doPut(`{"user":{"password":""}}`)
 	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "blank password should be rejected")
