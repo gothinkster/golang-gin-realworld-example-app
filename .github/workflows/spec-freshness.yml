@@ -1,0 +1,30 @@
+name: Spec freshness
+
+# Red when the vendored RealWorld API spec is behind the default branch of
+# realworld-apps/realworld. Not a test failure: it only means a newer spec exists.
+# Fix: bump SPECS_REF_DEFAULT and SPECS_SHA256_DEFAULT in scripts/run-spec-tests.sh.
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Spec is at upstream HEAD
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare pinned spec commit with upstream HEAD
+        run: |
+          pinned="$(sed -n 's/^SPECS_REF_DEFAULT="\([0-9a-f]*\)"/\1/p' scripts/run-spec-tests.sh)"
+          latest="$(git ls-remote https://github.com/realworld-apps/realworld.git HEAD | cut -f1)"
+          echo "pinned: $pinned"
+          echo "latest: $latest"
+          if [ "$pinned" != "$latest" ]; then
+            echo "::error::spec is behind upstream HEAD. bump SPECS_REF_DEFAULT and SPECS_SHA256_DEFAULT in scripts/run-spec-tests.sh."
+            exit 1
+          fi
