@@ -130,6 +130,30 @@ From the project root, run:
 ```
 go test ./...
 ```
+
+### API spec tests (Hurl & Bruno)
+
+This backend passes the full [RealWorld API spec test suite](https://github.com/realworld-apps/realworld/tree/main/specs/api),
+available in two flavors (Hurl is the source of truth; the Bruno collection is generated from it).
+The `run-spec-tests.sh` script downloads the specs at a **pinned commit** (sha256-verified tarball, go.sum-style),
+builds the app, starts a temporary server and runs the chosen suite against it:
+
+```bash
+# Hurl (requires https://hurl.dev)
+bash ./scripts/run-spec-tests.sh hurl
+
+# Bruno (requires node/npx or bun)
+bash ./scripts/run-spec-tests.sh bruno
+```
+
+Both suites run in CI (`hurl-api-test` and `bruno-api-test` jobs) and are the authoritative compliance check.
+(They replace the retired upstream Postman/Newman collection, which asserted a strict subset of the same behavior.)
+
+To bump the spec version, update `SPECS_REF_DEFAULT` (upstream commit) and `SPECS_SHA256_DEFAULT`
+(tarball checksum) in `scripts/run-spec-tests.sh`. To try a different version ad hoc:
+`SPECS_REF=main bash ./scripts/run-spec-tests.sh hurl` (checksum verification is skipped unless you
+also pass `SPECS_SHA256`). A weekly `spec-drift` workflow runs the suite against upstream `main`
+so we notice when the spec moves without blocking PRs.
 or
 ```
 go test ./... -cover

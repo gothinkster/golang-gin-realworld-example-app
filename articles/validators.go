@@ -17,19 +17,14 @@ type ArticleModelValidator struct {
 	articleModel ArticleModel `json:"-"`
 }
 
-func NewArticleModelValidator() ArticleModelValidator {
-	return ArticleModelValidator{}
+// makeSlug wraps slug.Make so handlers can use it without importing the slug
+// package under a name that would shadow local variables.
+func makeSlug(title string) string {
+	return slug.Make(title)
 }
 
-func NewArticleModelValidatorFillWith(articleModel ArticleModel) ArticleModelValidator {
-	articleModelValidator := NewArticleModelValidator()
-	articleModelValidator.Article.Title = articleModel.Title
-	articleModelValidator.Article.Description = articleModel.Description
-	articleModelValidator.Article.Body = articleModel.Body
-	for _, tagModel := range articleModel.Tags {
-		articleModelValidator.Article.Tags = append(articleModelValidator.Article.Tags, tagModel.Tag)
-	}
-	return articleModelValidator
+func NewArticleModelValidator() ArticleModelValidator {
+	return ArticleModelValidator{}
 }
 
 func (s *ArticleModelValidator) Bind(c *gin.Context) error {
@@ -46,6 +41,47 @@ func (s *ArticleModelValidator) Bind(c *gin.Context) error {
 	s.articleModel.Author = GetArticleUserModel(myUserModel)
 	s.articleModel.setTags(s.Article.Tags)
 	return nil
+}
+
+// ArticleUpdateValidator is the schema for PUT /api/articles/:slug. Nullable
+// fields give tri-state semantics: absent fields are skipped ("omitnil"),
+// null or blank fails "required" on the string fields, and an explicit null
+// tagList fails "notnull" (an empty tagList array is a valid value that
+// clears all tags).
+type ArticleUpdateValidator struct {
+	Article struct {
+		Title       common.Nullable[string]   `json:"title" binding:"omitnil,required,min=4"`
+		Description common.Nullable[string]   `json:"description" binding:"omitnil,required,max=2048"`
+		Body        common.Nullable[string]   `json:"body" binding:"omitnil,required,max=2048"`
+		TagList     common.Nullable[[]string] `json:"tagList" binding:"omitnil,notnull"`
+	} `json:"article"`
+}
+
+func NewArticleUpdateValidator() ArticleUpdateValidator {
+	return ArticleUpdateValidator{}
+}
+
+func (s *ArticleUpdateValidator) Bind(c *gin.Context) error {
+	return common.Bind(c, s)
+}
+
+// invalidFields lists request fields whose JSON value had the wrong type;
+// see UserUpdateValidator.invalidFields in the users package.
+func (s *ArticleUpdateValidator) invalidFields() []string {
+	fields := []string{}
+	if s.Article.Title.IsInvalid() {
+		fields = append(fields, "title")
+	}
+	if s.Article.Description.IsInvalid() {
+		fields = append(fields, "description")
+	}
+	if s.Article.Body.IsInvalid() {
+		fields = append(fields, "body")
+	}
+	if s.Article.TagList.IsInvalid() {
+		fields = append(fields, "tagList")
+	}
+	return fields
 }
 
 type CommentModelValidator struct {

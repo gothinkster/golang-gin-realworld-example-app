@@ -47,7 +47,7 @@ func AuthMiddleware(auto401 bool) gin.HandlerFunc {
 
 		if tokenString == "" {
 			if auto401 {
-				c.AbortWithStatus(http.StatusUnauthorized)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, common.NewErrorMessage("token", "is missing"))
 			}
 			return
 		}
@@ -62,7 +62,7 @@ func AuthMiddleware(auto401 bool) gin.HandlerFunc {
 
 		if err != nil {
 			if auto401 {
-				c.AbortWithStatus(http.StatusUnauthorized)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, common.NewErrorMessage("token", "is invalid"))
 			}
 			return
 		}

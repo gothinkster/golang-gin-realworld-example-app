@@ -2,6 +2,7 @@ package articles
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -524,7 +525,7 @@ var articleRequestTests = []struct {
 		"/api/articles/updated-title/comments/1",
 		"DELETE",
 		``,
-		http.StatusOK,
+		http.StatusNoContent,
 		``,
 		"delete comment should succeed",
 	},
@@ -548,7 +549,7 @@ var articleRequestTests = []struct {
 		"/api/articles/updated-title",
 		"DELETE",
 		``,
-		http.StatusOK,
+		http.StatusNoContent,
 		``,
 		"delete article should succeed",
 	},
@@ -559,7 +560,7 @@ var articleRequestTests = []struct {
 		"GET",
 		``,
 		http.StatusNotFound,
-		`"articles":"Invalid slug"`,
+		`"article":\["not found"\]`,
 		"deleted article should return 404",
 	},
 	// Test favorite non-existent article
@@ -571,7 +572,7 @@ var articleRequestTests = []struct {
 		"POST",
 		``,
 		http.StatusNotFound,
-		`"articles":"Invalid slug"`,
+		`"article":\["not found"\]`,
 		"favorite non-existent article should return 404",
 	},
 	// Test unfavorite non-existent article
@@ -583,7 +584,7 @@ var articleRequestTests = []struct {
 		"DELETE",
 		``,
 		http.StatusNotFound,
-		`"articles":"Invalid slug"`,
+		`"article":\["not found"\]`,
 		"unfavorite non-existent article should return 404",
 	},
 	// Test create article with invalid data
@@ -607,7 +608,7 @@ var articleRequestTests = []struct {
 		"POST",
 		`{"comment":{"body":"Test"}}`,
 		http.StatusNotFound,
-		`"comment":"Invalid slug"`,
+		`"article":\["not found"\]`,
 		"create comment on non-existent article should return 404",
 	},
 	// Test get comments on non-existent article
@@ -617,7 +618,7 @@ var articleRequestTests = []struct {
 		"GET",
 		``,
 		http.StatusNotFound,
-		`"comments":"Invalid slug"`,
+		`"article":\["not found"\]`,
 		"get comments on non-existent article should return 404",
 	},
 	// Test update non-existent article
@@ -629,10 +630,10 @@ var articleRequestTests = []struct {
 		"PUT",
 		`{"article":{"title":"Test"}}`,
 		http.StatusNotFound,
-		`"articles":"Invalid slug"`,
+		`"article":\["not found"\]`,
 		"update non-existent article should return 404",
 	},
-	// Test delete non-existent article (GORM delete returns OK even if not found)
+	// Test delete non-existent article
 	{
 		func(req *http.Request) {
 			common.HeaderTokenMock(req, 1)
@@ -640,9 +641,9 @@ var articleRequestTests = []struct {
 		"/api/articles/non-existent",
 		"DELETE",
 		``,
-		http.StatusOK,
-		``,
-		"delete non-existent article returns OK (soft delete behavior)",
+		http.StatusNotFound,
+		`"article":\["not found"\]`,
+		"delete non-existent article returns 404",
 	},
 	// Test delete comment with invalid id
 	{
@@ -653,8 +654,8 @@ var articleRequestTests = []struct {
 		"DELETE",
 		``,
 		http.StatusNotFound,
-		`"comment":"Invalid id"`,
-		"delete comment with invalid id should return 404",
+		`"article":\["not found"\]`,
+		"delete comment on unknown article should return 404",
 	},
 }
 
@@ -701,7 +702,7 @@ func TestCreateArticleRequiredFields(t *testing.T) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "Missing body should return 422")
-	asserts.Contains(w.Body.String(), "Body", "Error should mention Body field")
+	asserts.Contains(w.Body.String(), "body", "Error should mention body field")
 
 	// Test missing description field
 	req, _ = http.NewRequest("POST", "/api/articles", bytes.NewBufferString(`{"article":{"title":"Test Title","body":"Test Body"}}`))
@@ -710,7 +711,7 @@ func TestCreateArticleRequiredFields(t *testing.T) {
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "Missing description should return 422")
-	asserts.Contains(w.Body.String(), "Description", "Error should mention Description field")
+	asserts.Contains(w.Body.String(), "description", "Error should mention description field")
 
 	// Test valid article creation
 	req, _ = http.NewRequest("POST", "/api/articles", bytes.NewBufferString(`{"article":{"title":"Test Title","description":"Test Description","body":"Test Body"}}`))
@@ -747,7 +748,7 @@ func TestCreateCommentRequiredFields(t *testing.T) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "Missing body should return 422")
-	asserts.Contains(w.Body.String(), "Body", "Error should mention Body field")
+	asserts.Contains(w.Body.String(), "body", "Error should mention body field")
 
 	// Test valid comment creation - should return 201 per OpenAPI spec
 	req, _ = http.NewRequest("POST", fmt.Sprintf("/api/articles/%s/comments", article.Slug), bytes.NewBufferString(`{"comment":{"body":"Test comment body"}}`))
@@ -895,7 +896,7 @@ func TestArticleDeleteEndpoint(t *testing.T) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
-	asserts.Equal(http.StatusOK, w.Code, "Article delete should return 200")
+	asserts.Equal(http.StatusNoContent, w.Code, "Article delete should return 204")
 }
 
 func TestArticleFavoriteEndpoint(t *testing.T) {
@@ -977,7 +978,7 @@ func TestArticleCommentsEndpoint(t *testing.T) {
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
-	asserts.Equal(http.StatusOK, w.Code, "Comment delete should return 200")
+	asserts.Equal(http.StatusNoContent, w.Code, "Comment delete should return 204")
 }
 
 func TestArticleFeedEndpoint(t *testing.T) {
@@ -1063,7 +1064,7 @@ func TestArticleNotFoundErrors(t *testing.T) {
 	common.HeaderTokenMock(req, user.ID)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
-	asserts.Equal(http.StatusOK, w.Code, "Delete non-existent article returns 200")
+	asserts.Equal(http.StatusNotFound, w.Code, "Delete non-existent article returns 404")
 
 	// Test favorite non-existent article
 	req, _ = http.NewRequest("POST", "/api/articles/non-existent-slug/favorite", nil)
@@ -1242,7 +1243,7 @@ func TestCommentDeleteWithValidArticle(t *testing.T) {
 	common.HeaderTokenMock(req, user.ID)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
-	asserts.Equal(http.StatusOK, w.Code, "Delete existing comment should return 200")
+	asserts.Equal(http.StatusNoContent, w.Code, "Delete existing comment should return 204")
 }
 
 func TestSetTagsEmpty(t *testing.T) {
@@ -1389,7 +1390,7 @@ func TestArticleDeleteSuccess(t *testing.T) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
-	asserts.Equal(http.StatusOK, w.Code, "Delete existing article should return 200")
+	asserts.Equal(http.StatusNoContent, w.Code, "Delete existing article should return 204")
 
 	// Verify article is deleted
 	foundArticle, err := FindOneArticle(&ArticleModel{Slug: slug})
@@ -1602,4 +1603,383 @@ func TestMain(m *testing.M) {
 	exitVal := m.Run()
 	common.TestDBFree(test_db)
 	os.Exit(exitVal)
+}
+
+// Covers the tagList semantics of ArticleUpdate: omitted preserves, a new
+// array replaces (ReplaceTags), an empty array clears, null is rejected.
+func TestArticleUpdateTagListSemantics(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := setupRouter()
+	user := createTestUser()
+	suffix := common.RandInt()
+
+	createBody := fmt.Sprintf(
+		`{"article":{"title":"Tag Semantics %d","description":"d","body":"b","tagList":["alpha%d","beta%d"]}}`,
+		suffix, suffix, suffix)
+	req, _ := http.NewRequest("POST", "/api/articles", bytes.NewBufferString(createBody))
+	req.Header.Set("Content-Type", "application/json")
+	common.HeaderTokenMock(req, user.ID)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	asserts.Equal(http.StatusCreated, w.Code, "article with tags should be created")
+
+	var created struct {
+		Article struct {
+			Slug string `json:"slug"`
+		} `json:"article"`
+	}
+	asserts.NoError(json.Unmarshal(w.Body.Bytes(), &created))
+	slug := created.Article.Slug
+	asserts.NotEmpty(slug)
+
+	doPut := func(body string) *httptest.ResponseRecorder {
+		req, _ := http.NewRequest("PUT", "/api/articles/"+slug, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		common.HeaderTokenMock(req, user.ID)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		return w
+	}
+
+	// Omitted tagList preserves existing tags
+	w = doPut(`{"article":{"body":"updated body"}}`)
+	asserts.Equal(http.StatusOK, w.Code, "update without tagList should succeed")
+	asserts.Contains(w.Body.String(), fmt.Sprintf("alpha%d", suffix))
+	asserts.Contains(w.Body.String(), fmt.Sprintf("beta%d", suffix))
+
+	// A new array replaces the tag set
+	w = doPut(fmt.Sprintf(`{"article":{"tagList":["gamma%d"]}}`, suffix))
+	asserts.Equal(http.StatusOK, w.Code, "tagList replacement should succeed")
+	asserts.Contains(w.Body.String(), fmt.Sprintf("gamma%d", suffix))
+	asserts.NotContains(w.Body.String(), fmt.Sprintf("alpha%d", suffix))
+
+	// An empty array clears all tags
+	w = doPut(`{"article":{"tagList":[]}}`)
+	asserts.Equal(http.StatusOK, w.Code, "empty tagList should succeed")
+	asserts.Contains(w.Body.String(), `"tagList":[]`)
+
+	// Explicit null is rejected
+	w = doPut(`{"article":{"tagList":null}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "null tagList should be rejected")
+	asserts.Contains(w.Body.String(), `"tagList":["can't be null"]`)
+
+	// Wrong-typed fields are reported as invalid, not blank/null
+	w = doPut(`{"article":{"title":123}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "non-string title should be rejected")
+	asserts.Contains(w.Body.String(), `"title":["is invalid"]`)
+
+	w = doPut(`{"article":{"tagList":["ok",1]}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "mixed-type tagList should be rejected")
+	asserts.Contains(w.Body.String(), `"tagList":["is invalid"]`)
+}
+
+func TestArticleCreateDuplicateTitleSlugSuffix(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := setupRouter()
+	user := createTestUser()
+	suffix := common.RandInt()
+
+	title := fmt.Sprintf("Duplicate Title %d", suffix)
+	doPost := func() *httptest.ResponseRecorder {
+		body := fmt.Sprintf(`{"article":{"title":"%s","description":"d","body":"b"}}`, title)
+		req, _ := http.NewRequest("POST", "/api/articles", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		common.HeaderTokenMock(req, user.ID)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		return w
+	}
+	slugOf := func(w *httptest.ResponseRecorder) string {
+		var resp struct {
+			Article struct {
+				Slug string `json:"slug"`
+			} `json:"article"`
+		}
+		asserts.NoError(json.Unmarshal(w.Body.Bytes(), &resp))
+		return resp.Article.Slug
+	}
+
+	w := doPost()
+	asserts.Equal(http.StatusCreated, w.Code, "first article should be created")
+	first := slugOf(w)
+
+	w = doPost()
+	asserts.Equal(http.StatusCreated, w.Code, "same-title article should be created")
+	asserts.Equal(first+"-2", slugOf(w), "second article should get a suffixed slug")
+}
+
+func TestArticleUpdateDescriptionAndCollidingTitle(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := setupRouter()
+	user := createTestUser()
+	suffix := common.RandInt()
+
+	doPost := func(title string) string {
+		body := fmt.Sprintf(`{"article":{"title":"%s","description":"d","body":"b"}}`, title)
+		req, _ := http.NewRequest("POST", "/api/articles", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		common.HeaderTokenMock(req, user.ID)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		asserts.Equal(http.StatusCreated, w.Code)
+		var resp struct {
+			Article struct {
+				Slug string `json:"slug"`
+			} `json:"article"`
+		}
+		asserts.NoError(json.Unmarshal(w.Body.Bytes(), &resp))
+		return resp.Article.Slug
+	}
+
+	titleA := fmt.Sprintf("Collide Base %d", suffix)
+	slugA := doPost(titleA)
+	slugB := doPost(fmt.Sprintf("Other Title %d", suffix))
+
+	// Retitling B to A's title regenerates a non-colliding slug; the
+	// description update rides along.
+	body := fmt.Sprintf(`{"article":{"title":"%s","description":"new description"}}`, titleA)
+	req, _ := http.NewRequest("PUT", "/api/articles/"+slugB, bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	common.HeaderTokenMock(req, user.ID)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	asserts.Equal(http.StatusOK, w.Code, "colliding-title update should succeed")
+	asserts.Contains(w.Body.String(), fmt.Sprintf(`"slug":"%s-2"`, slugA))
+	asserts.Contains(w.Body.String(), `"description":"new description"`)
+}
+
+func TestArticleListFiltersByUserWithoutArticles(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := setupRouter()
+	// createTestUser never creates an ArticleUserModel, so both filters
+	// resolve the username but find no article-side record.
+	user := createTestUser()
+
+	for _, filter := range []string{"author", "favorited"} {
+		req, _ := http.NewRequest("GET", "/api/articles?"+filter+"="+user.Username, nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		asserts.Equal(http.StatusOK, w.Code, filter+" filter should succeed")
+		asserts.Contains(w.Body.String(), `"articlesCount":0`, filter+" filter should match nothing")
+	}
+}
+
+func TestArticleFeedWithoutAuthenticatedUser(t *testing.T) {
+	asserts := assert.New(t)
+
+	// Mount the authed routes behind optional auth so the handler's own
+	// anonymous-user guard is reachable.
+	r := gin.New()
+	r.RedirectTrailingSlash = false
+	v1 := r.Group("/api")
+	v1.Use(users.AuthMiddleware(false))
+	ArticlesRegister(v1.Group("/articles"))
+
+	req, _ := http.NewRequest("GET", "/api/articles/feed", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	asserts.Equal(http.StatusUnauthorized, w.Code, "anonymous feed access should be rejected")
+}
+
+func TestArticleUpdateWrongTypedStringFields(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := setupRouter()
+	user := createTestUser()
+	suffix := common.RandInt()
+
+	body := fmt.Sprintf(`{"article":{"title":"Typed Fields %d","description":"d","body":"b"}}`, suffix)
+	req, _ := http.NewRequest("POST", "/api/articles", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	common.HeaderTokenMock(req, user.ID)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	asserts.Equal(http.StatusCreated, w.Code)
+	var created struct {
+		Article struct {
+			Slug string `json:"slug"`
+		} `json:"article"`
+	}
+	asserts.NoError(json.Unmarshal(w.Body.Bytes(), &created))
+
+	doPut := func(body string) *httptest.ResponseRecorder {
+		req, _ := http.NewRequest("PUT", "/api/articles/"+created.Article.Slug, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		common.HeaderTokenMock(req, user.ID)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		return w
+	}
+
+	w = doPut(`{"article":{"description":123}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "non-string description should be rejected")
+	asserts.Contains(w.Body.String(), `"description":["is invalid"]`)
+
+	w = doPut(`{"article":{"body":123}}`)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "non-string body should be rejected")
+	asserts.Contains(w.Body.String(), `"body":["is invalid"]`)
+}
+
+func TestArticleCommentErrorPaths(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := setupRouter()
+	author := createTestUser()
+	other := createTestUser()
+	suffix := common.RandInt()
+
+	body := fmt.Sprintf(`{"article":{"title":"Comment Errors %d","description":"d","body":"b"}}`, suffix)
+	req, _ := http.NewRequest("POST", "/api/articles", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	common.HeaderTokenMock(req, author.ID)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	asserts.Equal(http.StatusCreated, w.Code)
+	var created struct {
+		Article struct {
+			Slug string `json:"slug"`
+		} `json:"article"`
+	}
+	asserts.NoError(json.Unmarshal(w.Body.Bytes(), &created))
+	slug := created.Article.Slug
+
+	// A comment without a body fails validation
+	req, _ = http.NewRequest("POST", "/api/articles/"+slug+"/comments", bytes.NewBufferString(`{"comment":{}}`))
+	req.Header.Set("Content-Type", "application/json")
+	common.HeaderTokenMock(req, author.ID)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	asserts.Equal(http.StatusUnprocessableEntity, w.Code, "empty comment should be rejected")
+
+	// Create a real comment to delete
+	req, _ = http.NewRequest("POST", "/api/articles/"+slug+"/comments", bytes.NewBufferString(`{"comment":{"body":"hello"}}`))
+	req.Header.Set("Content-Type", "application/json")
+	common.HeaderTokenMock(req, author.ID)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	asserts.Equal(http.StatusCreated, w.Code)
+	var comment struct {
+		Comment struct {
+			ID uint `json:"id"`
+		} `json:"comment"`
+	}
+	asserts.NoError(json.Unmarshal(w.Body.Bytes(), &comment))
+
+	doDelete := func(id string, userID uint) *httptest.ResponseRecorder {
+		req, _ := http.NewRequest("DELETE", "/api/articles/"+slug+"/comments/"+id, nil)
+		common.HeaderTokenMock(req, userID)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		return w
+	}
+
+	asserts.Equal(http.StatusNotFound, doDelete("notanumber", author.ID).Code, "non-numeric comment id should 404")
+	asserts.Equal(http.StatusNotFound, doDelete("999999999", author.ID).Code, "unknown comment id should 404")
+	asserts.Equal(http.StatusForbidden, doDelete(fmt.Sprint(comment.Comment.ID), other.ID).Code,
+		"deleting someone else's comment should be forbidden")
+}
+
+func TestBatchGetFavoriteCountsEmpty(t *testing.T) {
+	asserts := assert.New(t)
+	counts := BatchGetFavoriteCounts(nil)
+	asserts.Empty(counts, "no ids should produce an empty map")
+}
+
+// Simulates the slug race on create deterministically: a one-shot gorm
+// callback occupies the handler's freshly computed slug just before its own
+// INSERT, forcing one ErrDuplicatedKey retry.
+func TestArticleCreateSlugRaceRetries(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := setupRouter()
+	user := createTestUser()
+	suffix := common.RandInt()
+	title := fmt.Sprintf("Slug Race %d", suffix)
+	slug := makeSlug(title)
+
+	db := common.GetDB()
+	raced := false
+	err := db.Callback().Create().Before("gorm:create").Register("test:slug_race", func(tx *gorm.DB) {
+		if raced {
+			return
+		}
+		if _, ok := tx.Statement.Dest.(*ArticleModel); !ok {
+			return
+		}
+		raced = true
+		tx.Session(&gorm.Session{NewDB: true}).Exec("INSERT INTO article_models (slug, title, description, body, author_id) VALUES (?, ?, ?, ?, ?)",
+			slug, title, "d", "b", 0)
+	})
+	asserts.NoError(err)
+	defer db.Callback().Create().Remove("test:slug_race")
+
+	body := fmt.Sprintf(`{"article":{"title":"%s","description":"d","body":"b"}}`, title)
+	req, _ := http.NewRequest("POST", "/api/articles", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	common.HeaderTokenMock(req, user.ID)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	asserts.True(raced, "the simulated concurrent insert should have run")
+	asserts.Equal(http.StatusCreated, w.Code, "creation should succeed after the retry")
+	asserts.Contains(w.Body.String(), `"slug":"`+slug)
+}
+
+// Same as above for the update path: the callback occupies the regenerated
+// slug right before the handler's UPDATE statement.
+func TestArticleUpdateSlugRaceRetries(t *testing.T) {
+	asserts := assert.New(t)
+
+	r := setupRouter()
+	user := createTestUser()
+	suffix := common.RandInt()
+
+	body := fmt.Sprintf(`{"article":{"title":"Update Race Old %d","description":"d","body":"b"}}`, suffix)
+	req, _ := http.NewRequest("POST", "/api/articles", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	common.HeaderTokenMock(req, user.ID)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	asserts.Equal(http.StatusCreated, w.Code)
+	var created struct {
+		Article struct {
+			Slug string `json:"slug"`
+		} `json:"article"`
+	}
+	asserts.NoError(json.Unmarshal(w.Body.Bytes(), &created))
+
+	newTitle := fmt.Sprintf("Update Race New %d", suffix)
+	newSlug := makeSlug(newTitle)
+
+	db := common.GetDB()
+	raced := false
+	err := db.Callback().Update().Before("gorm:update").Register("test:update_slug_race", func(tx *gorm.DB) {
+		if raced {
+			return
+		}
+		if _, ok := tx.Statement.Model.(*ArticleModel); !ok {
+			return
+		}
+		raced = true
+		tx.Session(&gorm.Session{NewDB: true}).Exec("INSERT INTO article_models (slug, title, description, body, author_id) VALUES (?, ?, ?, ?, ?)",
+			newSlug, newTitle, "d", "b", 0)
+	})
+	asserts.NoError(err)
+	defer db.Callback().Update().Remove("test:update_slug_race")
+
+	body = fmt.Sprintf(`{"article":{"title":"%s"}}`, newTitle)
+	req, _ = http.NewRequest("PUT", "/api/articles/"+created.Article.Slug, bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	common.HeaderTokenMock(req, user.ID)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	asserts.True(raced, "the simulated concurrent insert should have run")
+	asserts.Equal(http.StatusOK, w.Code, "update should succeed after the retry")
+	asserts.Contains(w.Body.String(), `"slug":"`+newSlug)
 }

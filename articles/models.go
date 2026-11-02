@@ -1,6 +1,7 @@
 package articles
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/gothinkster/golang-gin-realworld-example-app/common"
@@ -176,8 +177,7 @@ func getAllTags() ([]TagModel, error) {
 
 func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleModel, int, error) {
 	db := common.GetDB()
-	var models []ArticleModel
-	var count int
+	models := make([]ArticleModel, 0)
 
 	offset_int, errOffset := strconv.Atoi(offset)
 	if errOffset != nil {
@@ -189,78 +189,64 @@ func FindManyArticle(tag, author, limit, offset, favorited string) ([]ArticleMod
 		limit_int = 20
 	}
 
-	tx := db.Begin()
-	if tag != "" {
-		var tagModel TagModel
-		tx.Where(TagModel{Tag: tag}).First(&tagModel)
-		if tagModel.ID != 0 {
-			// Get article IDs via association
-			var tempModels []ArticleModel
-			if err := tx.Model(&tagModel).Offset(offset_int).Limit(limit_int).Association("ArticleModels").Find(&tempModels); err != nil {
-				tx.Rollback()
-				return models, count, err
+	// buildQuery returns a fresh filtered query so it can be used once for the
+	// total count and once for the paginated fetch. The bool is false when the
+	// filter target (tag or user) does not exist, meaning an empty result.
+	buildQuery := func() (*gorm.DB, bool) {
+		query := db.Model(&ArticleModel{})
+		if tag != "" {
+			var tagModel TagModel
+			if err := db.Where(TagModel{Tag: tag}).First(&tagModel).Error; err != nil {
+				return nil, false
 			}
-			count = int(tx.Model(&tagModel).Association("ArticleModels").Count())
-			// Fetch articles with preloaded associations in single query, ordered by updated_at desc
-			if len(tempModels) > 0 {
-				var ids []uint
-				for _, m := range tempModels {
-					ids = append(ids, m.ID)
-				}
-				tx.Preload("Author.UserModel").Preload("Tags").Where("id IN ?", ids).Order("updated_at desc").Find(&models)
+			query = query.
+				Joins("JOIN article_tags ON article_tags.article_model_id = article_models.id").
+				Where("article_tags.tag_model_id = ?", tagModel.ID)
+		} else if author != "" {
+			var userModel users.UserModel
+			if err := db.Where(users.UserModel{Username: author}).First(&userModel).Error; err != nil {
+				return nil, false
 			}
+			var articleUserModel ArticleUserModel
+			if err := db.Where(ArticleUserModel{UserModelID: userModel.ID}).First(&articleUserModel).Error; err != nil {
+				return nil, false
+			}
+			query = query.Where("author_id = ?", articleUserModel.ID)
+		} else if favorited != "" {
+			var userModel users.UserModel
+			if err := db.Where(users.UserModel{Username: favorited}).First(&userModel).Error; err != nil {
+				return nil, false
+			}
+			var articleUserModel ArticleUserModel
+			if err := db.Where(ArticleUserModel{UserModelID: userModel.ID}).First(&articleUserModel).Error; err != nil {
+				return nil, false
+			}
+			query = query.
+				Joins("JOIN favorite_models ON favorite_models.favorite_id = article_models.id").
+				Where("favorite_models.favorite_by_id = ? AND favorite_models.deleted_at IS NULL", articleUserModel.ID)
 		}
-	} else if author != "" {
-		var userModel users.UserModel
-		tx.Where(users.UserModel{Username: author}).First(&userModel)
-		articleUserModel := GetArticleUserModel(userModel)
-
-		if articleUserModel.ID != 0 {
-			count = int(tx.Model(&articleUserModel).Association("ArticleModels").Count())
-			// Get article IDs via association
-			var tempModels []ArticleModel
-			if err := tx.Model(&articleUserModel).Offset(offset_int).Limit(limit_int).Association("ArticleModels").Find(&tempModels); err != nil {
-				tx.Rollback()
-				return models, count, err
-			}
-			// Fetch articles with preloaded associations in single query, ordered by updated_at desc
-			if len(tempModels) > 0 {
-				var ids []uint
-				for _, m := range tempModels {
-					ids = append(ids, m.ID)
-				}
-				tx.Preload("Author.UserModel").Preload("Tags").Where("id IN ?", ids).Order("updated_at desc").Find(&models)
-			}
-		}
-	} else if favorited != "" {
-		var userModel users.UserModel
-		tx.Where(users.UserModel{Username: favorited}).First(&userModel)
-		articleUserModel := GetArticleUserModel(userModel)
-		if articleUserModel.ID != 0 {
-			var favoriteModels []FavoriteModel
-			tx.Where(FavoriteModel{
-				FavoriteByID: articleUserModel.ID,
-			}).Offset(offset_int).Limit(limit_int).Find(&favoriteModels)
-
-			count = int(tx.Model(&articleUserModel).Association("FavoriteModels").Count())
-			// Batch fetch articles to avoid N+1 query
-			if len(favoriteModels) > 0 {
-				var ids []uint
-				for _, favorite := range favoriteModels {
-					ids = append(ids, favorite.FavoriteID)
-				}
-				tx.Preload("Author.UserModel").Preload("Tags").Where("id IN ?", ids).Order("updated_at desc").Find(&models)
-			}
-		}
-	} else {
-		var count64 int64
-		tx.Model(&ArticleModel{}).Count(&count64)
-		count = int(count64)
-		tx.Offset(offset_int).Limit(limit_int).Preload("Author.UserModel").Preload("Tags").Find(&models)
+		return query, true
 	}
 
-	err := tx.Commit().Error
-	return models, count, err
+	countQuery, ok := buildQuery()
+	if !ok {
+		return models, 0, nil
+	}
+	var count64 int64
+	if err := countQuery.Count(&count64).Error; err != nil {
+		return models, 0, err
+	}
+
+	fetchQuery, ok := buildQuery()
+	if !ok {
+		return models, 0, nil
+	}
+	err := fetchQuery.
+		Preload("Author.UserModel").Preload("Tags").
+		Order("article_models.created_at DESC").
+		Offset(offset_int).Limit(limit_int).
+		Find(&models).Error
+	return models, int(count64), err
 }
 
 func (self *ArticleUserModel) GetArticleFeed(limit, offset string) ([]ArticleModel, int, error) {
@@ -299,7 +285,7 @@ func (self *ArticleUserModel) GetArticleFeed(limit, offset string) ([]ArticleMod
 			var count64 int64
 			tx.Model(&ArticleModel{}).Where("author_id IN ?", authorIDs).Count(&count64)
 			count = int(count64)
-			tx.Preload("Author.UserModel").Preload("Tags").Where("author_id IN ?", authorIDs).Order("updated_at desc").Offset(offset_int).Limit(limit_int).Find(&models)
+			tx.Preload("Author.UserModel").Preload("Tags").Where("author_id IN ?", authorIDs).Order("created_at desc").Offset(offset_int).Limit(limit_int).Find(&models)
 		}
 	}
 
@@ -307,10 +293,49 @@ func (self *ArticleUserModel) GetArticleFeed(limit, offset string) ([]ArticleMod
 	return models, count, err
 }
 
+// makeUniqueSlug returns baseSlug, or baseSlug-N for the smallest N that does
+// not collide with any existing article (including soft-deleted rows, which
+// still occupy the unique index).
+func makeUniqueSlug(baseSlug string) string {
+	db := common.GetDB()
+	candidate := baseSlug
+	for suffix := 2; ; suffix++ {
+		var count int64
+		db.Unscoped().Model(&ArticleModel{}).Where("slug = ?", candidate).Count(&count)
+		if count == 0 {
+			return candidate
+		}
+		candidate = fmt.Sprintf("%s-%d", baseSlug, suffix)
+	}
+}
+
+// ReplaceTags persists a new tag set for an existing article, creating any
+// missing tags and detaching the ones no longer referenced.
+func (model *ArticleModel) ReplaceTags(tags []string) error {
+	tagList, err := buildTagModels(tags)
+	if err != nil {
+		return err
+	}
+	db := common.GetDB()
+	if err := db.Model(model).Association("Tags").Replace(&tagList); err != nil {
+		return err
+	}
+	model.Tags = tagList
+	return nil
+}
+
 func (model *ArticleModel) setTags(tags []string) error {
+	tagList, err := buildTagModels(tags)
+	if err != nil {
+		return err
+	}
+	model.Tags = tagList
+	return nil
+}
+
+func buildTagModels(tags []string) ([]TagModel, error) {
 	if len(tags) == 0 {
-		model.Tags = []TagModel{}
-		return nil
+		return []TagModel{}, nil
 	}
 
 	db := common.GetDB()
@@ -340,13 +365,12 @@ func (model *ArticleModel) setTags(tags []string) error {
 					tagList = append(tagList, existing)
 					continue
 				}
-				return err
+				return nil, err
 			}
 			tagList = append(tagList, newTag)
 		}
 	}
-	model.Tags = tagList
-	return nil
+	return tagList, nil
 }
 
 func (model *ArticleModel) Update(data interface{}) error {
